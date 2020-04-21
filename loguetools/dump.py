@@ -862,6 +862,7 @@ from collections import namedtuple
 from types import SimpleNamespace
 import fnmatch
 from pprint import pprint
+import hashlib
 
 
 r"""
@@ -944,53 +945,55 @@ def parse_patchdata(data):
     return patch
 
 
+def id_from_name(zipobj, name):
+    for i, p in enumerate(zip_progbins(zipobj)):
+        patchdata = zipobj.read(p)
+        prgname = program_name(patchdata)
+        if prgname != name:
+            continue
+        ident = i + 1
+        break
+    else:
+        print("No patch named", name)
+    return ident
+
+
 @click.command()
 @click.argument("filename", type=click.File("rb"))
-@click.option("--name", "-n", help="Dump the patch with name NAME")
-@click.option("--id", "-i", type=int, help="Dump the patch with id ID")
-@click.option("--list", "-l", is_flag=True, help="List the patches")
-def dump(filename, name, id, list):
+@click.option("--match_name", "-n", help="Dump the patch with name NAME")
+@click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
+@click.option("--verbose", "-v", is_flag=True, help="List the patch contents")
+@click.option("--md5", "-m", is_flag=True, help="List patch checksums")
+def dump(filename, match_name, match_ident, verbose, md5):
     """Dumps contents of FILENAME to stdout. Supports both minilogue og and xd patch files.
     
     Args:
         filename (click.argument str): [description]
-        name (click.option str): name of the patch to dump
-        id (click.option int): 1-based id of the patch to dump
-        list (click.option bool): list all patches
+        match_name (click.option str): name of the patch to dump
+        match_ident (click.option int): 1-based id of the patch to dump
+        verbose (click.option bool): list patch contents
+        md5 (click.option bool): list patch checksums
 
     """
     zipobj = zipfile.ZipFile(filename, "r")
+    proglist = zip_progbins(zipobj)
 
-    if id is not None:
-        p = zip_progbins(zipobj)[id - 1]
-        patchdata = zipobj.read(p)
-        prgname = program_name(patchdata)
-        print(f"{int(p[5:8])+1:03d}: {prgname}")
-        patch = parse_patchdata(patchdata)
-        pprint(vars(patch))
-        sys.exit()
+    if match_name is not None:
+        ident = id_from_name(zipobj, match_name)
 
-    if name is not None:
-        for p in zip_progbins(zipobj):
-            patchdata = zipobj.read(p)
-            prgname = program_name(patchdata)
-            if prgname != name:
-                continue
-            print(f"{int(p[5:8])+1:03d}: {prgname}")
-            patch = parse_patchdata(patchdata)
-            pprint(vars(patch))
-            break
-        else:
-            print("No patch named", name)
-        sys.exit()
+    if match_ident is not None:
+        proglist = [proglist[match_ident - 1]]
 
-    for p in zip_progbins(zipobj):
+    for p in proglist:
         patchdata = zipobj.read(p)
         prgname = program_name(patchdata)
         if prgname == "Init Program":
             continue
-        print(f"{int(p[5:8])+1:03d}: {prgname}")
-        if not list:
+        checksum = ""
+        if md5:
+            checksum = hashlib.md5(patchdata).hexdigest()
+        print(f"{int(p[5:8])+1:03d}: {prgname:12s} {checksum}")
+        if verbose:
             patch = parse_patchdata(patchdata)
             pprint(vars(patch))
             print()
