@@ -1164,7 +1164,7 @@ def translate(filename, match_name, match_ident, verbose, md5):
     proglist = zip_progbins(zipobj)
 
     if match_name is not None:
-        ident = id_from_name(zipobj, match_name)
+        match_ident = id_from_name(zipobj, match_name)
 
     if match_ident is not None:
         proglist = [proglist[match_ident - 1]]
