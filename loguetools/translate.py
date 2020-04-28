@@ -398,7 +398,7 @@ the forms
 """
 
 # Simple translation functions
-fn_portamento = lambda src, dest: src.portamento_time - 1
+# fn_portamento = lambda src, dest: src.portamento_time - 1
 fn_sync = lambda src, dest: 1 - src.sync
 fn_ring = lambda src, dest: 1 - src.ring
 fn_delay_on_off = lambda src, dest: 0 if src.delay_output_routing == 0 else 1
@@ -452,7 +452,8 @@ minilogue_xd_patch_struct = (
     ("str_PROG", "4s", "str_PROG"),
     ("program_name", "12s", "program_name"),
     ("octave", "B", "keyboard_octave"),
-    ("portamento", "B", fn_portamento),
+    # ("portamento", "B", fn_portamento),
+    ("portamento", "B", "portamento_time"),
     ("key_trig", "B", 0),
     ("voice_mode_depth", "H", fn_voice_mode_depth),
     ("voice_mode_type", "B", fn_voice_mode_type),
@@ -566,7 +567,7 @@ minilogue_xd_patch_struct = (
     ("bpm", "H", "bpm"),
     ("step_length", "B", "step_length"),
     ("step_resolution", "B", "step_resolution"),
-    ("swing", "b", "swing"),
+    ("swing", "B", "swing"),
     ("default_gate_time", "B", "default_gate_time"),
     ("step1_16", "<H", "step1_16"),
     ("step1_16_motion", "<H", 0),                                   # Fix this
@@ -1095,6 +1096,11 @@ def translate(filename, match_name, match_ident, verbose, md5):
         print(f"{int(p[5:8])+1:03d}: {prgname}")
 
         patch = parse_patchdata(patchdata)
+
+
+        patch.prgname = prgname
+
+
         patch_xd, binary_xd = convert_og_to_xd(patch)
         output_patches.append(patch_xd)
         output_binaries.append(binary_xd)
@@ -1102,8 +1108,6 @@ def translate(filename, match_name, match_ident, verbose, md5):
         if verbose:
             pprint(vars(patch))
             print()
-        
-    1/0
 
 
 if __name__ == "__main__":

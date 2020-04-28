@@ -12,6 +12,16 @@ def test_og_patch_translate():
     assert result.exit_code == 0
     # assert result.output == "configure"
 
+def test_og_library_translate():
+    # result = runner.invoke(
+    #     translate, "./loguetools/tests/MinilogueOGProg_000.zip"
+    # )
+    result = runner.invoke(translate, "./loguetools/tests/AnalogueVintage.mnlgpreset")
+    assert result.exit_code == 0
+    # assert result.output == "configure"
+
+
+
 def test_signed_shift():
     assert tr.signed_shift(1, 0) == 1
     assert tr.signed_shift(1, 1) == 2
