@@ -887,9 +887,19 @@ patch_translation = (
 )
 
 
+prog_info_template = """\
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xd_ProgramInformation>
+  <Programmer></Programmer>
+  <Comment></Comment>
+</xd_ProgramInformation>
+"""
+
+
 import sys
 import click
-import zipfile
+from zipfile import ZipFile
 from attr import attrs, attrib
 import struct
 from collections import namedtuple
@@ -898,6 +908,9 @@ import fnmatch
 from pprint import pprint
 import copy
 import ctypes
+import pathlib
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 
 XD_PATCH_LENGTH = 1024
@@ -1060,24 +1073,52 @@ def id_from_name(zipobj, name):
     return ident
 
 
+def fileinfo_xml(n):
+    """Build FileInformation.xml metadata file.
+
+    Args:
+        n (str): number of patches
+
+    Returns:
+        str: formatted xml
+
+    """
+    # create the file structure
+    root = ET.Element('KorgMSLibrarian_Data')
+    product = ET.SubElement(root, 'Product')
+    product.text = 'minilogue xd'
+    contents = ET.SubElement(root, 'Contents')
+
+    contents.set('NumFavoriteData', '0')
+    contents.set('NumProgramData', str(n))
+    contents.set('NumPresetInformation', '0')
+    contents.set('NumTuneScaleData', '0')
+    contents.set('NumTuneOctData', '0')
+
+    for i in range(n):
+        prog = ET.SubElement(contents, 'ProgramData')
+        prog_info = ET.SubElement(prog, 'Information')
+        prog_info.text = f'Prog_{i:03d}.prog_info'
+        prog_bin = ET.SubElement(prog, 'ProgramBinary')
+        prog_bin.text = f'Prog_{i:03d}.prog_bin'
+
+    # https://stackoverflow.com/a/3095723
+    pretty_version = minidom.parseString(
+        ET.tostring(root, encoding='utf-8', method='xml')
+    ).toprettyxml(indent='  ')
+
+    return pretty_version
+
+
 @click.command()
-@click.argument("filename", type=click.File("rb"))
+@click.argument('filename', type=click.Path(exists=True))
 @click.option("--match_name", "-n", help="Dump the patch with name NAME")
 @click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
 @click.option("--verbose", "-v", is_flag=True, help="List the patch contents")
 @click.option("--md5", "-m", is_flag=True, help="List patch checksums")
 def translate(filename, match_name, match_ident, verbose, md5):
-    """Dumps contents of FILENAME to stdout. Supports both minilogue og and xd patch files.
-
-    Args:
-        filename (click.argument str): [description]
-        match_name (click.option str): name of the patch to dump
-        match_ident (click.option int): 1-based id of the patch to dump
-        verbose (click.option bool): list patch contents
-        md5 (click.option bool): list patch checksums
-
-    """
-    zipobj = zipfile.ZipFile(filename, "r")
+    """Dumps contents of FILENAME to stdout. Supports both minilogue og and xd patch files."""
+    zipobj = ZipFile(filename, "r")
     proglist = zip_progbins(zipobj)
 
     if match_name is not None:
@@ -1086,28 +1127,39 @@ def translate(filename, match_name, match_ident, verbose, md5):
     if match_ident is not None:
         proglist = [proglist[match_ident - 1]]
 
-    output_patches = []
-    output_binaries = []
-    for p in proglist:
-        patchdata = zipobj.read(p)
-        prgname = program_name(patchdata)
-        if prgname == "Init Program":
-            continue
-        print(f"{int(p[5:8])+1:03d}: {prgname}")
+    if len(proglist) == 1:
+        patch_ext = ".mnlgxdprog"
+    else:
+        patch_ext = ".mnlgxdlib"
+    
+    output_file = pathlib.Path(filename).with_suffix(patch_ext)
+    with ZipFile(output_file, "w") as xdzip:
+        for i, p in enumerate(proglist):
+            patchdata = zipobj.read(p)
+            prgname = program_name(patchdata)
+            if prgname == "Init Program":
+                continue
+            print(f"{int(p[5:8])+1:03d}: {prgname}")
 
-        patch = parse_patchdata(patchdata)
+            patch = parse_patchdata(patchdata)
+            patch_xd, binary_xd = convert_og_to_xd(patch)
 
+            # .prog_bin record/file
+            xdzip.writestr(f"Prog_{i:03d}.prog_bin", binary_xd)
 
-        patch.prgname = prgname
+            # .prog_info record/file
+            xdzip.writestr(f"Prog_{i:03d}.prog_info", prog_info_template)
 
+            if verbose:
+                pprint(vars(patch))
+                print()
 
-        patch_xd, binary_xd = convert_og_to_xd(patch)
-        output_patches.append(patch_xd)
-        output_binaries.append(binary_xd)
+        # print(prog_info_template, file=open(f"Prog_{i:03d}.prog_info", 'w'))
 
-        if verbose:
-            pprint(vars(patch))
-            print()
+        # FileInformation.xml record/file
+        xdzip.writestr(f"FileInformation.xml", fileinfo_xml(len(proglist)))
+
+        print("Wrote", output_file)
 
 
 if __name__ == "__main__":
