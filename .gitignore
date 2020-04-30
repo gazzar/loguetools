@@ -136,3 +136,12 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+*.prog_info
+*.prog_bin
+*.TunO_info
+*.TunO_bin
+*.TunS_info
+*.TunS_bin
+FileInformation.xml
+FavoriteData.fav_data
