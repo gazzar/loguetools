@@ -386,19 +386,7 @@ I don't know if the breakover is from 1 to 2 or greater, but I will assume that.
 
 """
 
-"""
-A translation table for converting from minilogue OG patch data. Each tuple takes one of
-the forms
-
-('label', 'binary-format string', 'src1_name')
-('label', 'binary-format string', 'src1_name_XX_x', ..., 'srcN_name_XX_x'), where N >= 1
-('label', 'binary-format string', p), where p is an integer
-('label', 'binary-format string', f, arg1, ..., argN), where f is a function with optional args
-
-"""
-
 # Simple translation functions
-# fn_portamento = lambda src, dest: src.portamento_time - 1
 fn_sync = lambda src, dest: 1 - src.sync
 fn_ring = lambda src, dest: 1 - src.ring
 fn_delay_on_off = lambda src, dest: 0 if src.delay_output_routing == 0 else 1
@@ -447,12 +435,20 @@ def fn_voice_mode_depth(src, dest):
         return src.voice_mode_depth
 
 
+"""
+A translation table for converting from minilogue OG patch data. Each tuple takes one of
+the forms
+
+('label', 'binary-format string', 'src1_name')
+('label', 'binary-format string', p), where p is an integer
+('label', 'binary-format string', f, arg1, ..., argN), where f is a function with optional args
+
+"""
 minilogue_xd_patch_struct = (
     # 0
     ("str_PROG", "4s", "str_PROG"),
     ("program_name", "12s", "program_name"),
     ("octave", "B", "keyboard_octave"),
-    # ("portamento", "B", fn_portamento),
     ("portamento", "B", "portamento_time"),
     ("key_trig", "B", 0),
     ("voice_mode_depth", "H", fn_voice_mode_depth),
@@ -836,57 +832,6 @@ minilogue_og_postnormalisation_deletions = (
 )
 
 
-patch_translation = (
-    ("vco_1_pitch", "vco_1_pitch_b2_9_FF_2", "vco_1_pitch_shape_octave_wave_03_0"),
-    ("vco_1_shape", "vco_1_shape_b2_9_FF_2", "vco_1_pitch_shape_octave_wave_0C_E"),
-    ("vco_1_octave", "vco_1_pitch_shape_octave_wave_30_C"),
-    ("vco_1_wave", "vco_1_pitch_shape_octave_wave_C0_A"),
-    ("vco_2_pitch", "vco_2_pitch_b2_9_FF_2", "vco_2_pitch_shape_octave_wave_03_0"),
-    ("vco_2_shape", "vco_2_shape_b2_9_FF_2", "vco_2_pitch_shape_octave_wave_0C_E"),
-    ("vco_2_octave", "vco_2_pitch_shape_octave_wave_30_C"),
-    ("vco_2_wave", "vco_2_pitch_shape_octave_wave_C0_A"),
-    ("cross_mod_depth", "cross_mod_depth_b2_9_FF_2", "xmod_vco2_pitch_vco1_lvl_vco2_lvl_03_0"),
-    ("vco_2_pitch_eg_int", "vco_2_pitch_eg_int_b2_9_FF_2", "xmod_vco2_pitch_vco1_lvl_vco2_lvl_0C_E"),
-    ("vco_1_level", "vco_1_level_b2_9_FF_2", "xmod_vco2_pitch_vco1_lvl_vco2_lvl_30_C"),
-    ("vco_2_level", "vco_2_level_b2_9_FF_2", "xmod_vco2_pitch_vco1_lvl_vco2_lvl_C0_A"),
-    ("noise_level", "noise_level_b2_9_FF_2", "sync_ring_noise_cutoff_res_0C_E"),
-    ("cutoff", "cutoff_b2_9_FF_2", "sync_ring_noise_cutoff_res_30_C"),
-    ("resonance", "resonance_b2_9_FF_2", "sync_ring_noise_cutoff_res_C0_A"),
-    ("sync", "sync_ring_noise_cutoff_res_01_0"),
-    ("ring", "sync_ring_noise_cutoff_res_02_F"),
-    ("cutoff_eg_int", "cutoff_eg_int_b2_9_FF_2", "cutoff_params_03_0"),
-    ("cutoff_velocity", "cutoff_params_0C_E"),
-    ("cutoff_kbd_track", "cutoff_params_30_C"),
-    ("cutoff_type", "cutoff_params_40_A"),
-    ("amp_eg_attack", "amp_eg_attack_b2_9_FF_2", "amp_adsr_03_0"),
-    ("amp_eg_decay", "amp_eg_decay_b2_9_FF_2", "amp_adsr_0C_E"),
-    ("amp_eg_sustain", "amp_eg_sustain_b2_9_FF_2", "amp_adsr_30_C"),
-    ("amp_eg_release", "amp_eg_release_b2_9_FF_2", "amp_adsr_C0_A"),
-    ("amp_attack", "eg_attack_b2_9_FF_2", "eg_adsr_03_0"),
-    ("amp_decay", "eg_decay_b2_9_FF_2", "eg_adsr_0C_E"),
-    ("amp_sustain", "eg_sustain_b2_9_FF_2", "eg_adsr_30_C"),
-    ("amp_release", "eg_release_b2_9_FF_2", "eg_adsr_C0_A"),
-    ("lfo_rate", "lfo_rate_b2_9_FF_2", "lfo_rate_int_tgt_eg_03_0"),
-    ("lfo_int", "lfo_int_b2_9_FF_2", "lfo_rate_int_tgt_eg_0C_E"),
-    ("lfo_target", "lfo_rate_int_tgt_eg_30_C"),
-    ("lfo_eg", "lfo_rate_int_tgt_eg_C0_A"),
-    ("lfo_wave", "lfo_wave_dly_03_0"),
-    ("lfo_delay_output_routing", "lfo_wave_dly_C0_A"),
-    ("delay_hi_pass_cutoff", "delay_hi_pass_cutoff_b2_9_FF_2", "delay_b0_1_0C_E"),
-    ("delay_time", "delay_time_b2_9_FF_2", "delay_b0_1_30_C"),
-    ("delay_feedback", "delay_feedback_b2_9_FF_2", "delay_b0_1_C0_A"),
-    ("voice_mode", "voice_mode_and_depth_b0_1_07_0"),
-    ("voice_mode_depth", "voice_mode_depth_b2_9_FF_2", "voice_mode_and_depth_b0_1_30_C"),
-    ("bend_range_plus", "bend_range_plusminus_0F_0"),
-    ("bend_range_minus", "bend_range_plusminus_F0_C"),
-    ("lfo_key_sync", "lfo_portamento_params_01_0"),
-    ("lfo_bpm_sync", "lfo_portamento_params_02_F"),
-    ("lfo_voice_sync", "lfo_portamento_params_04_E"),
-    ("portamento_bpm", "lfo_portamento_params_08_D"),
-    ("portamento_mode", "lfo_portamento_params_10_C"),
-)
-
-
 prog_info_template = """\
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -1001,7 +946,7 @@ def normalise_og_patch(patch):
 
 def convert_og_to_xd(patch):
     patch_xd = Patch()
-    binary_xd = bytearray(XD_PATCH_LENGTH) #ctypes.create_string_buffer(XD_PATCH_LENGTH)
+    binary_xd = bytearray(XD_PATCH_LENGTH)
 
     offset = 0
     for m in minilogue_xd_patch_struct:
@@ -1025,7 +970,7 @@ def convert_og_to_xd(patch):
 
 
 def zip_progbins(zipobj):
-    """returns an ordered list of all the contained .prog_bin patch block names
+    """Returns an ordered list of all the contained .prog_bin patch block names
 
     Args:
         zipobj (zipfile object): patch file or library zipfile object
@@ -1195,8 +1140,6 @@ def translate(filename, match_name, match_ident, verbose, md5):
             if verbose:
                 pprint(vars(patch))
                 print()
-
-        # print(prog_info_template, file=open(f"Prog_{i:03d}.prog_info", 'w'))
 
         if len(proglist) > 1:
             # FavoriteData.fav_data record/file
