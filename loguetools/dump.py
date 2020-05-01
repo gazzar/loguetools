@@ -1,3 +1,15 @@
+import sys
+import click
+import zipfile
+from attr import attrs, attrib
+import struct
+from collections import namedtuple
+from types import SimpleNamespace
+import fnmatch
+from pprint import pprint
+import hashlib
+
+
 """
 Korg's midi tables for the minilogues; XD and original (OG). I added a couple of notes, labelled Gn
 
@@ -633,25 +645,8 @@ minilogue_xd_patch_struct = (
 )
 
 
-import sys
-import click
-import zipfile
-from attr import attrs, attrib
-import struct
-from collections import namedtuple
-from types import SimpleNamespace
-import fnmatch
-from pprint import pprint
-import hashlib
-
-
-r"""
-cd C:\Users\garyr\Documents\minilogue\python\dump_translate
-run dump.py ..\..\patches\my_individual_patches\LectroFlute.mnlgxdprog
-"""
-
-
 class Patch(SimpleNamespace):
+    """A simple container class for patch data."""
     pass
 
 
@@ -659,7 +654,7 @@ patch_value = namedtuple("Field", ["name", "type"])
 
 
 def zip_progbins(zipobj):
-    """returns an ordered list of all the contained .prog_bin patch block names
+    """Returns an ordered list of all the contained .prog_bin patch block names
     
     Args:
         zipobj (zipfile object): patch file or library zipfile object
@@ -707,6 +702,15 @@ def patch_type(data):
 
 
 def parse_patchdata(data):
+    """Decodes a minilogue og format packed binary patch
+
+    Args:
+        data (packed binary): minilogue og patch
+
+    Returns:
+        Patch: normalised/decoded patch
+
+    """
     patch = Patch()
     patch.minilogue_type = patch_type(data)
 
@@ -726,6 +730,20 @@ def parse_patchdata(data):
 
 
 def id_from_name(zipobj, name):
+    """Searches patches contained in the zipped object finding the 0-based index of the
+    matching named patch.
+
+    Args:
+        zipobj (ZipFile instance): zipped patches object
+        name (str): patch name to match
+
+    Returns:
+        int: 0-based matched index
+
+    Raises:
+        ValueError: If name is not found
+
+    """
     for i, p in enumerate(zip_progbins(zipobj)):
         patchdata = zipobj.read(p)
         prgname = program_name(patchdata)
@@ -746,13 +764,14 @@ def id_from_name(zipobj, name):
 @click.option("--md5", "-m", is_flag=True, help="List patch checksums")
 def dump(filename, match_name, match_ident, verbose, md5):
     """Dumps contents of FILENAME to stdout. Supports both minilogue og and xd patch files.
-    
-    Args:
-        filename (click.argument str): [description]
-        match_name (click.option str): name of the patch to dump
-        match_ident (click.option int): 1-based id of the patch to dump
-        verbose (click.option bool): list patch contents
-        md5 (click.option bool): list patch checksums
+
+    \b
+    Examples
+    --------
+    dump path_to_program_bank.mnlgpreset
+    dump -n "Program Name" path_to_program_bank.mnlgpreset
+    dump -n ProgramName path_to_program_bank.mnlgpreset
+    dump ProgramName.mnlgprog
 
     """
     zipobj = zipfile.ZipFile(filename, "r")
