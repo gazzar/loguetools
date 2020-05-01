@@ -10,11 +10,20 @@ setuptools.setup(
     description="Korg minilogue family patch manipulation tools",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    install_requires=[
+        'Click',
+    ],
+    py_modules=['translate', 'dump'],
+    entry_points='''
+        [console_scripts]
+        translate=translate:translate
+        dump=dump:dump
+    ''',
     url="https://github.com/gazzar/loguetools",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.7',
