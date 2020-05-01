@@ -1,5 +1,22 @@
+import sys
+import click
+from zipfile import ZipFile, ZIP_DEFLATED
+from attr import attrs, attrib
+import struct
+from collections import namedtuple
+from types import SimpleNamespace, LambdaType, FunctionType
+import fnmatch
+from pprint import pprint
+import copy
+import ctypes
+import pathlib
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
+import re
+
+
 """
-Korg's midi tables for the minilogues; XD and original (OG). I added a couple of notes, labelled Gn
+Korg's program format tables for the minilogues; XD and original (OG). I added a couple of notes, labelled Gn
 
 Minilogue XD                                                                 Minilogue OG
 +---------+-------+---------+---------------------------------------------+  +-------+-------+---------+---------------------------------------------+
@@ -870,23 +887,6 @@ favorite_template = """\
 """
 
 
-import sys
-import click
-from zipfile import ZipFile, ZIP_DEFLATED
-from attr import attrs, attrib
-import struct
-from collections import namedtuple
-from types import SimpleNamespace, LambdaType, FunctionType
-import fnmatch
-from pprint import pprint
-import copy
-import ctypes
-import pathlib
-import xml.etree.ElementTree as ET
-from xml.dom import minidom
-import re
-
-
 XD_PATCH_LENGTH = 1024
 
 
@@ -900,6 +900,25 @@ patch_translation_value = namedtuple("Field", ["name", "type", "source"])
 
 
 def decode_src_string(src_string):
+    """Decodes the src strings in the tuples in the minilogue_og_patch_normalisation table.
+
+    Tuples in the minilogue_og_patch_normalisation table take the form
+
+    ('dest_name', 'src1_name_XX_x', 'src2_name_XX_x', ..., 'srcN_name_XX_x'), where N >= 1.
+
+    'src1_name_XX_x' contains 'src1_name', the name of a source field, a hex bit mask XX and
+    a 2's-complement single-hex-digit x encoding the number of bits to shift up (+ve values)
+    or down (-ve) the masked values before adding them to the destination.
+
+    Args:
+        src_string (str): A string of the form described above.
+
+    Returns:
+        str: src_name substring
+        int: 8-bit bitmask defining a masked region of the src_name field
+        int: number of bits by which to shift the masked bit region
+
+    """
     src_parts = src_string.split("_")
     src_name = "_".join(src_parts[:-2])
     mask = int(src_parts[-2], base=16)
@@ -910,6 +929,16 @@ def decode_src_string(src_string):
 
 
 def signed_shift(val, shift):
+    """Bit shifts the value val. +ve values shift left and -ve shift right.
+
+    Args:
+        val (int): Value to be shifted
+        shift (int): Number of bits to shift by
+
+    Returns:
+        int: Shifted result
+
+    """
     return val << shift if shift >= 0 else val >> -shift
 
 
@@ -945,6 +974,16 @@ def normalise_og_patch(patch):
 
 
 def convert_og_to_xd(patch):
+    """Converts a minilogue og patch to a minilogue xd patch.
+
+    Args:
+        patch (Patch instance): minilogue og patch to translate
+
+    Returns:
+        Patch: minilogue xd patch object
+        Binary Struct: minilogue xd patch binary
+
+    """
     patch_xd = Patch()
     binary_xd = bytearray(XD_PATCH_LENGTH)
 
@@ -1018,6 +1057,14 @@ def patch_type(data):
 
 
 def parse_patchdata(data):
+    """[summary]
+
+    Args:
+        data ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
     patch = Patch()
     patch.minilogue_type = patch_type(data)
     assert(patch.minilogue_type == "og")
@@ -1035,6 +1082,20 @@ def parse_patchdata(data):
 
 
 def id_from_name(zipobj, name):
+    """Searches patches contained in the zipped object finding the 0-based index of the
+    matching named patch.
+
+    Args:
+        zipobj (ZipFile instance): zipped patches object
+        name (str): patch name to match
+
+    Returns:
+        int: 0-based matched index
+
+    Raises:
+        ValueError: If name is not found
+
+    """
     for i, p in enumerate(zip_progbins(zipobj)):
         patchdata = zipobj.read(p)
         prgname = program_name(patchdata)
@@ -1043,7 +1104,7 @@ def id_from_name(zipobj, name):
         ident = i + 1
         break
     else:
-        print("No patch named", name)
+        raise ValueError("No patch named " + name)
     return ident
 
 
@@ -1084,11 +1145,11 @@ def fileinfo_xml(non_init_patch_ids):
         prog_bin.text = f'Prog_{i:03d}.prog_bin'
 
     # https://stackoverflow.com/a/3095723
-    pretty_version = minidom.parseString(
+    formatted_xml = minidom.parseString(
         ET.tostring(root, encoding='utf-8', method='xml')
     ).toprettyxml(indent='  ')
 
-    return pretty_version
+    return formatted_xml
 
 
 @click.command()
@@ -1098,7 +1159,17 @@ def fileinfo_xml(non_init_patch_ids):
 @click.option("--verbose", "-v", is_flag=True, help="List the patch contents")
 @click.option("--md5", "-m", is_flag=True, help="List patch checksums")
 def translate(filename, match_name, match_ident, verbose, md5):
-    """Dumps contents of FILENAME to stdout. Supports both minilogue og and xd patch files."""
+    """Translate a minilogue program or program bank to the minilogue xd.
+
+    \b
+    Examples
+    --------
+    translate path_to_program_bank.mnlgpreset
+    translate -n "Program Name" path_to_program_bank.mnlgpreset
+    translate -n ProgramName path_to_program_bank.mnlgpreset
+    translate ProgramName.mnlgprog
+
+    """
     zipobj = ZipFile(filename, "r", compression=ZIP_DEFLATED, compresslevel=9)
     proglist = zip_progbins(zipobj)
 
