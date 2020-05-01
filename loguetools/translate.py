@@ -899,7 +899,7 @@ prog_info_template = """\
 
 import sys
 import click
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 from attr import attrs, attrib
 import struct
 from collections import namedtuple
@@ -1090,7 +1090,7 @@ def fileinfo_xml(non_init_patch_ids):
     contents = ET.SubElement(root, 'Contents')
 
     contents.set('NumFavoriteData', '0')
-    contents.set('NumProgramData', str(n))
+    contents.set('NumProgramData', str(len(non_init_patch_ids)))
     contents.set('NumPresetInformation', '0')
     contents.set('NumTuneScaleData', '0')
     contents.set('NumTuneOctData', '0')
@@ -1118,7 +1118,7 @@ def fileinfo_xml(non_init_patch_ids):
 @click.option("--md5", "-m", is_flag=True, help="List patch checksums")
 def translate(filename, match_name, match_ident, verbose, md5):
     """Dumps contents of FILENAME to stdout. Supports both minilogue og and xd patch files."""
-    zipobj = ZipFile(filename, "r")
+    zipobj = ZipFile(filename, "r", compression=ZIP_DEFLATED, compresslevel=9)
     proglist = zip_progbins(zipobj)
 
     if match_name is not None:
