@@ -1073,11 +1073,11 @@ def id_from_name(zipobj, name):
     return ident
 
 
-def fileinfo_xml(n):
+def fileinfo_xml(non_init_patch_ids):
     """Build FileInformation.xml metadata file.
 
     Args:
-        n (str): number of patches
+        non_init_patch_ids (list of ints): 0-based list of non-Init-Program patches
 
     Returns:
         str: formatted xml
@@ -1095,7 +1095,7 @@ def fileinfo_xml(n):
     contents.set('NumTuneScaleData', '0')
     contents.set('NumTuneOctData', '0')
 
-    for i in range(n):
+    for i in non_init_patch_ids:
         prog = ET.SubElement(contents, 'ProgramData')
         prog_info = ET.SubElement(prog, 'Information')
         prog_info.text = f'Prog_{i:03d}.prog_info'
@@ -1132,6 +1132,7 @@ def translate(filename, match_name, match_ident, verbose, md5):
     else:
         patch_ext = ".mnlgxdlib"
     
+    non_init_patch_ids = []
     output_file = pathlib.Path(filename).with_suffix(patch_ext)
     with ZipFile(output_file, "w") as xdzip:
         for i, p in enumerate(proglist):
@@ -1139,6 +1140,7 @@ def translate(filename, match_name, match_ident, verbose, md5):
             prgname = program_name(patchdata)
             if prgname == "Init Program":
                 continue
+            non_init_patch_ids.append(i)
             print(f"{int(p[5:8])+1:03d}: {prgname}")
 
             patch = parse_patchdata(patchdata)
@@ -1157,7 +1159,7 @@ def translate(filename, match_name, match_ident, verbose, md5):
         # print(prog_info_template, file=open(f"Prog_{i:03d}.prog_info", 'w'))
 
         # FileInformation.xml record/file
-        xdzip.writestr(f"FileInformation.xml", fileinfo_xml(len(proglist)))
+        xdzip.writestr(f"FileInformation.xml", fileinfo_xml(non_init_patch_ids))
 
         print("Wrote", output_file)
 
