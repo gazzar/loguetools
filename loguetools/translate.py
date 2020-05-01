@@ -897,6 +897,34 @@ prog_info_template = """\
 """
 
 
+favorite_template = """\
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xd_Favorite>
+  <Bank>
+    <Data>0</Data>
+    <Data>1</Data>
+    <Data>2</Data>
+    <Data>3</Data>
+    <Data>4</Data>
+    <Data>5</Data>
+    <Data>6</Data>
+    <Data>7</Data>
+  </Bank>
+  <Bank>
+    <Data>8</Data>
+    <Data>9</Data>
+    <Data>10</Data>
+    <Data>11</Data>
+    <Data>12</Data>
+    <Data>13</Data>
+    <Data>14</Data>
+    <Data>15</Data>
+  </Bank>
+</xd_Favorite>
+"""
+
+
 import sys
 import click
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -911,6 +939,7 @@ import ctypes
 import pathlib
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+import re
 
 
 XD_PATCH_LENGTH = 1024
@@ -1089,11 +1118,18 @@ def fileinfo_xml(non_init_patch_ids):
     product.text = 'minilogue xd'
     contents = ET.SubElement(root, 'Contents')
 
-    contents.set('NumFavoriteData', '0')
     contents.set('NumProgramData', str(len(non_init_patch_ids)))
     contents.set('NumPresetInformation', '0')
     contents.set('NumTuneScaleData', '0')
     contents.set('NumTuneOctData', '0')
+
+    if len(non_init_patch_ids) == 0:
+        contents.set('NumFavoriteData', '0')
+    else:
+        contents.set('NumFavoriteData', '1')
+        fave = ET.SubElement(contents, 'FavoriteData')
+        fave_info = ET.SubElement(fave, 'File')
+        fave_info.text = 'FavoriteData.fav_data'
 
     for i in non_init_patch_ids:
         prog = ET.SubElement(contents, 'ProgramData')
@@ -1127,13 +1163,17 @@ def translate(filename, match_name, match_ident, verbose, md5):
     if match_ident is not None:
         proglist = [proglist[match_ident - 1]]
 
+    input_file = pathlib.Path(filename)
     if len(proglist) == 1:
+        # https://stackoverflow.com/a/13593932
+        stem = re.sub('[^\w\-_\.]', '_', match_name)
         patch_ext = ".mnlgxdprog"
     else:
+        stem = input_file.stem
         patch_ext = ".mnlgxdlib"
-    
+    output_file = input_file.with_name(stem).with_suffix(patch_ext)
+
     non_init_patch_ids = []
-    output_file = pathlib.Path(filename).with_suffix(patch_ext)
     with ZipFile(output_file, "w") as xdzip:
         for i, p in enumerate(proglist):
             patchdata = zipobj.read(p)
@@ -1157,6 +1197,10 @@ def translate(filename, match_name, match_ident, verbose, md5):
                 print()
 
         # print(prog_info_template, file=open(f"Prog_{i:03d}.prog_info", 'w'))
+
+        if len(proglist) > 1:
+            # FavoriteData.fav_data record/file
+            xdzip.writestr(f"FavoriteData.fav_data", favorite_template)
 
         # FileInformation.xml record/file
         xdzip.writestr(f"FileInformation.xml", fileinfo_xml(non_init_patch_ids))
