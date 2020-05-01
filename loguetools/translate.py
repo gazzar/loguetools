@@ -1057,13 +1057,14 @@ def patch_type(data):
 
 
 def parse_patchdata(data):
-    """[summary]
+    """Decodes a minilogue og format packed binary patch
 
     Args:
-        data ([type]): [description]
+        data (packed binary): minilogue og patch
 
     Returns:
-        [type]: [description]
+        Patch: normalised/decoded patch
+
     """
     patch = Patch()
     patch.minilogue_type = patch_type(data)
