@@ -13,10 +13,11 @@ setuptools.setup(
     install_requires=[
         'Click',
     ],
-    py_modules=['translate', 'dump'],
+    py_modules=['translate', 'explode', 'dump'],
     entry_points='''
         [console_scripts]
         translate=translate:translate
+        explode=explode:explode
         dump=dump:dump
     ''',
     url="https://github.com/gazzar/loguetools",
