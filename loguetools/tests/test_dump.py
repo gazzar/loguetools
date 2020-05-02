@@ -8,7 +8,7 @@ runner = CliRunner()
 
 def test_og_patch_dump():
     result = runner.invoke(
-        dump, "../../patches/my_individual_patches/MinilogueOGProg_000.zip"
+        dump, "./loguetools/tests/og_orig/Syn_Lead_1.mnlgprog"
     )
     assert result.exit_code == 0
     # assert result.output == "configure"
@@ -16,7 +16,7 @@ def test_og_patch_dump():
 
 def test_og_patch_dump_by_ident():
     result = runner.invoke(
-        dump, "../../patches/my_individual_patches/MinilogueOGProg_000.zip -i 1"
+        dump, "./loguetools/tests/og_orig/Syn_Lead_1.mnlgprog -i 1"
     )
     assert result.exit_code == 0
     # assert result.output == "configure"
@@ -24,7 +24,7 @@ def test_og_patch_dump_by_ident():
 
 def test_og_patch_dump_by_name():
     result = runner.invoke(
-        dump, "../../patches/my_individual_patches/MinilogueOGProg_000.zip -n 'Syn Lead 1'"
+        dump, "./loguetools/tests/og_orig/Syn_Lead_1.mnlgprog -n 'Syn Lead 1'"
     )
     assert result.exit_code == 0
     # assert result.output == "configure"
@@ -32,14 +32,14 @@ def test_og_patch_dump_by_name():
 
 def test_xd_patch_dump():
     result = runner.invoke(
-        dump, ["../../patches/my_individual_patches/LectroFlute.mnlgxdprog"]
+        dump, ["./loguetools/tests/xd_orig/LectroFlute.mnlgxdprog"]
     )
     assert result.exit_code == 0
     # assert result.output == "configure"
 
 def test_xd_patch_dump_by_ident():
     result = runner.invoke(
-        dump, "../../patches/my_individual_patches/LectroFlute.mnlgxdprog -i 1"
+        dump, "./loguetools/tests/xd_orig/LectroFlute.mnlgxdprog -i 1"
     )
     assert result.exit_code == 0
     # assert result.output == "configure"
@@ -47,13 +47,13 @@ def test_xd_patch_dump_by_ident():
 
 def test_xd_patch_dump_by_name():
     result = runner.invoke(
-        dump, "../../patches/my_individual_patches/LectroFlute.mnlgxdprog -n 'LectroFlute'"
+        dump, "./loguetools/tests/xd_orig/LectroFlute.mnlgxdprog -n 'LectroFlute'"
     )
     assert result.exit_code == 0
     # assert result.output == "configure"
 
 
 def test_xd_library_dump():
-    result = runner.invoke(dump, "../../patches/2019-12-17.mnlgxdlib")
+    result = runner.invoke(dump, "./loguetools/tests/xd_orig/2019-12-17.mnlgxdlib")
     assert result.exit_code == 0
     # assert result.output == "configure"
