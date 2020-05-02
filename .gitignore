@@ -143,5 +143,9 @@ cython_debug/
 *.TunO_bin
 *.TunS_info
 *.TunS_bin
+*.mnlgxdlib
+*.mnlgxdprog
+*.mnlgprog
+*.mnlgpreset
 FileInformation.xml
 FavoriteData.fav_data
