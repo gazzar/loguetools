@@ -54,8 +54,7 @@ def convert_og_to_xd(patch):
 @click.option("--match_name", "-n", help="Dump the patch with name NAME")
 @click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
 @click.option("--verbose", "-v", is_flag=True, help="List the patch contents")
-@click.option("--md5", "-m", is_flag=True, help="List patch checksums")
-def translate(filename, match_name, match_ident, verbose, md5):
+def translate(filename, match_name, match_ident, verbose):
     """Translate a minilogue program or program bank to the minilogue xd.
 
     \b
