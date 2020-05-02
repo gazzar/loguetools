@@ -401,20 +401,23 @@ Korg's note P3 table shows 1, 2, 2, 3 but should be 1, 2, 3, 4
 Korg's note P2 shows 0~73:5th but it should be more like 0~1:Mono 2~73:5th
 I don't know if the breakover is from 1 to 2 or greater, but I will assume that.
 
+Tables say Sync and Ring settings are inverted but that isn't true.
+Delay time needs scaling: og max delay=350ms, xd high-pass max delay=654ms
+Tables say Filter cutoff keyboard tracking value is the same but I find 0->2 -> 2->0
+
 """
 
 # Simple translation functions
-fn_sync = lambda src, dest: 1 - src.sync
-fn_ring = lambda src, dest: 1 - src.ring
 fn_delay_on_off = lambda src, dest: 0 if src.delay_output_routing == 0 else 1
 fn_str_pred = lambda src, dest: "PRED"
 fn_str_sq = lambda src, dest: "SQ"
 fn_target = lambda src, dest: 0 if src.lfo_eg == 2 else 1
 fn_lfo_mode = lambda src, dest: 1 if src.lfo_bpm_sync == 0 else 2
 fn_cutoff_velocity = lambda src, dest: (0, 63, 127)[src.cutoff_velocity]
+fn_cutoff_kbd_track = lambda src, dest: 2 - src.cutoff_kbd_track
 fn_multi_octave = lambda src, dest: 0 if src.vco_1_octave == 0 else src.vco_1_octave - 1
 fn_voice_mode_type = lambda src, dest: {0:4, 1:4, 2:3, 3:2, 4:2, 5:4, 6:1, 7:4}[src.voice_mode]
-
+fn_delay_time = lambda src, dest: int(src.delay_time * 350.0/654.0)
 
 def fn_voice_mode_depth(src, dest):
     """
@@ -478,8 +481,8 @@ minilogue_xd_patch_struct = (
     ("vco_2_octave", "B", "vco_2_octave"),
     ("vco_2_pitch", "H", "vco_2_pitch"),
     ("vco_2_shape", "H", "vco_2_shape"),
-    ("sync", "B", fn_sync),
-    ("ring", "B", fn_ring),
+    ("sync", "B", "sync"),
+    ("ring", "B", "ring"),
     ("cross_mod_depth", "H", "cross_mod_depth"),
     ("multi_type", "B", 0),
     ("select_noise", "B", 1),
@@ -498,7 +501,7 @@ minilogue_xd_patch_struct = (
     ("cutoff", "H", "cutoff"),
     ("resonance", "H", "resonance"),
     ("cutoff_drive", "B", 0),
-    ("cutoff_keyboard_track", "B", "cutoff_kbd_track"),
+    ("cutoff_keyboard_track", "B", fn_cutoff_kbd_track),
     ("amp_eg_attack", "H", "amp_eg_attack"),
     ("amp_eg_decay", "H", "amp_eg_decay"),
     ("amp_eg_sustain", "H", "amp_eg_sustain"),
@@ -524,7 +527,7 @@ minilogue_xd_patch_struct = (
     ("delay_on_off", "B", fn_delay_on_off),
     # 100
     ("delay_sub_type", "B", 3),
-    ("delay_time", "H", "delay_time"),
+    ("delay_time", "H", fn_delay_time),  
     ("delay_depth", "H", "delay_feedback"),
     ("reverb_on_off", "B", 0),
     ("reverb_sub_type", "B", 0),
@@ -571,8 +574,8 @@ minilogue_xd_patch_struct = (
     ("user_param1_2_3_4_type", "B", 0),
     # 150
     ("program_transpose", "B", 13),
-    ("delay_dry_wet", "H", 1024),
-    ("reverb_dry_wet", "H", 1024),
+    ("delay_dry_wet", "H", 512),    # 50% wet/dry
+    ("reverb_dry_wet", "H", 512),  # 50% wet/dry
     ("midi_after_touch_assign", "B", 12),
     ("str_PRED", "4s", fn_str_pred),
     ("str_SQ", "2s", fn_str_sq),
