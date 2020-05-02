@@ -276,7 +276,7 @@ def fileinfo_xml(non_init_patch_ids):
     contents.set("NumTuneScaleData", "0")
     contents.set("NumTuneOctData", "0")
 
-    if len(non_init_patch_ids) == 0:
+    if len(non_init_patch_ids) <= 1:
         contents.set("NumFavoriteData", "0")
     else:
         contents.set("NumFavoriteData", "1")
