@@ -2,6 +2,7 @@ import click
 from click.testing import CliRunner
 from ..translate import translate
 
+
 runner = CliRunner()
 
 def test_og_patch_translate():
