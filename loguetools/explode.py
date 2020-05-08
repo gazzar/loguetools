@@ -14,9 +14,28 @@ import common
 
 XD_PATCH_LENGTH = 1024
 
+filenames = {}
 
-def sanitise_filepath(filepath):
+def sanitise_patchname(filepath):
+    """Generate a sensible patch filename stem.
+    Replaces whitespace with underscores and ensures all names are unique.
+    If a patch name has already been encountered during bank export, if encountered
+    again, the new name is munged by appending a hyphen and unique number.
+
+    Args:
+        filepath (Path object): A Path object with a stem element
+
+    Returns:
+        Path: Sanitised path
+
+    """
     stem = re.sub(r"[^\w\-_\.]", "_", filepath.stem)
+    if filepath.stem in filenames:
+        filenames[filepath.stem] = filenames[filepath.stem] + 1
+        stem = f"{stem}-{filenames[filepath.stem]}"
+        filenames[stem] = 0
+    else:
+        filenames[filepath.stem] = 0
     output_path = filepath.with_name(stem).with_suffix(filepath.suffix)
     return output_path
 
@@ -55,7 +74,7 @@ def explode(filename, match_name, match_ident):
         if prgname == "Init Program":
             continue
         output_path = (dir_path / prgname).with_suffix(".mnlgxdprog")
-        output_path = sanitise_filepath(output_path)
+        output_path = sanitise_patchname(output_path)
         with ZipFile(output_path, "w") as xdzip:
             print(f"{int(p[5:8])+1:03d}: {prgname}")
 
