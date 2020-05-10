@@ -149,3 +149,5 @@ cython_debug/
 *.mnlgpreset
 FileInformation.xml
 FavoriteData.fav_data
+
+.idea
