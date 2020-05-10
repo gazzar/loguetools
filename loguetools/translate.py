@@ -35,8 +35,8 @@ def convert_og_to_xd(patch):
             value = getattr(patch, f.source)
         elif isinstance(f.source, (int, bytes)):
             value = f.source
-        elif isinstance(f.source, (LambdaType, FunctionType)):
-            value = f.source(patch, patch_xd)
+        elif callable(f.source):
+            value = f.source(patch)
         else:
             raise (Exception("Unknown patch field type"))
 
