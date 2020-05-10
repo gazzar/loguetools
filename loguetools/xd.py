@@ -111,7 +111,7 @@ OG:
     if A << D and the triangle if A ~= D.
     1. Saw down _|\_    3. Tri up   _/\_
     2. Saw up   _  _    4. Tri down _  _
-                    |/                  \/
+                 |/                  \/
 
     Timings (s) of the XD's EG envelope (^RISEvFALL)
     A  | 512   1023    0     0    0    0      768
