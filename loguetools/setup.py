@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    version="0.0.1",
+    version="0.1.0",
     author="Gary Ruben",
     author_email="gary.ruben@gmail.com",
     description="Korg minilogue family patch manipulation tools",
