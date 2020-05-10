@@ -1,22 +1,40 @@
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 from collections import namedtuple
+from math import exp, log
+
+
+clip = lambda val, low, high: max(low, min(val, high))
+
+def twos_comp(val, bits):
+    """2's complement of int value val"""
+    if (val & (1 << (bits - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
+      val = val - (1 << bits)        # compute negative value
+    return val
 
 
 # Simple translation functions
-fn_delay_on_off = lambda src, dest: 0 if src.delay_output_routing == 0 else 1
-fn_str_pred = lambda src, dest: "PRED"
-fn_str_sq = lambda src, dest: "SQ"
-fn_target = lambda src, dest: 0 if src.lfo_eg == 2 else 1
-fn_lfo_mode = lambda src, dest: 1 if src.lfo_bpm_sync == 0 else 2
-fn_cutoff_velocity = lambda src, dest: (0, 63, 127)[src.cutoff_velocity]
-fn_cutoff_kbd_track = lambda src, dest: 2 - src.cutoff_kbd_track
-fn_multi_octave = lambda src, dest: 0 if src.vco_1_octave == 0 else src.vco_1_octave - 1
-fn_voice_mode_type = lambda src, dest: {0: 4, 1: 4, 2: 3, 3: 2, 4: 2, 5: 4, 6: 1, 7: 4}[src.voice_mode]
-fn_delay_time = lambda src, dest: int(src.delay_time * 350.0 / 654.0)
+fn_delay_on_off = lambda src: 0 if src.delay_output_routing == 0 else 1
+fn_str_pred = lambda src: "PRED"
+fn_str_sq = lambda src: "SQ"
+# XD swing encoding is 0,75,150=-75%,0,+75% but OG uses something else; maybe 2's complement?
+fn_swing = lambda src: clip(twos_comp(src.swing, 8) + 75, 0, 150)
+fn_cutoff_velocity = lambda src: (0, 63, 127)[src.cutoff_velocity]
+fn_cutoff_kbd_track = lambda src: 2 - src.cutoff_kbd_track
+fn_multi_octave = lambda src: 0 if src.vco_1_octave == 0 else src.vco_1_octave - 1
+fn_voice_mode_type = lambda src: {0: 4, 1: 4, 2: 3, 3: 2, 4: 2, 5: 4, 6: 1, 7: 4}[src.voice_mode]
+# The following seems wrong; need more data
+fn_delay_time = lambda src: int(src.delay_time * 350.0 / 654.0)
 
+# Based on the SonicLabs review, the minilogue's portamento time setting encodes both
+# the portamento time and the EG Legato setting. The OG midi docs say
+# |  61   |  0~7  |  0~128  |  Portament Time          0,1~129=OFF,0~128  |
+# I think they should say
+# |  61   |  0~7  |  0~127  |  Portament Time          0,1~127=OFF,0~126  |
+fn_portamento_time = lambda src: 0 if src.portamento_time == 0 else src.portamento_time - 1
+fn_eg_legato = lambda src: src.portamento_time > 0
 
-def fn_voice_mode_depth(src, dest):
+def fn_voice_mode_depth(src):
     """
     -XD-
     *note P3 (VOICE MODE TYPE)
@@ -52,6 +70,217 @@ def fn_voice_mode_depth(src, dest):
         return src.voice_mode_depth
 
 
+"""
+The routing possibilities for the EG and LFO are quite different in the OG and XD. In
+the following one selection is possible per independent group a-e:
+XD:
+   a / EG INT     -> CUTOFF
+   a | EG INT     -> PITCH 1 & 2
+   a \ EG INT     -> PITCH 2
+   b / LFO        -> CUTOFF
+   b | LFO        -> SHAPE 1 & 2
+   b | LFO        -> SHAPE 2
+   b | LFO        -> PITCH 1 & 2
+   b | LFO        -> PITCH 2
+   b | LFO-1-SHOT -> CUTOFF
+   b | LFO-1-SHOT -> PITCH 1 & 2
+   b \ LFO-1-SHOT -> PITCH 2
+
+OG:
+   c < EG INT     -> CUTOFF
+   d < EG INT     -> PITCH 2
+   e / LFO        -> CUTOFF
+   e | LFO        -> SHAPE 1 & 2
+   e \ LFO        -> PITCH 1 & 2
+
+    Note: The EG can be targeted to the LFO RATE and INTensity. There is no possibility
+    for this on the XD so we must ignore it.
+
+    On the XD, LFO-1-SHOT is included explicitly because it can act as a second envelope
+    if the LFO is not being used. The translator follows the following principles:
+    The amounts of the OG's EG INTensity and LFO INTensity will be sorted from highest
+    to lowest and the two highest INTensity groups will be allocated on the XD. In case
+    of a tie, the LFO group will be given lowest priority.
+
+    In the case where we use the LFO in 1-Shot mode to act as an envelope, we don't 
+    have much control. Since this is targeted to pitch, we will assume that most
+    patches are using it as an attack transient. This means we can assume both that
+    the sustain level is 0 and the release can be ignored, so we just need to look
+    at approximating the Attack and Decay. We will choose from the following 4
+    possibilities (The pulse waveform would be of limited use). We choose the saw
+    if A << D and the triangle if A ~= D.
+    1. Saw down _|\_    3. Tri up   _/\_
+    2. Saw up   _  _    4. Tri down _  _
+                    |/                  \/
+
+    Timings (s) of the XD's EG envelope (^RISEvFALL)
+    A  | 512   1023    0     0    0    0      768
+    D  |  0      0   1023   512  256  768     256
+    --------------------------------------------------
+    (s)|^1.08 ^3.63 v31.1  v1.5 v0.28 v3.8 ^2.04v0.29
+
+    So Attack and Decay are both nonlinear but I can't be bothered to work these out
+    for now, and I don't know the OG's timings either, so I'll use the XD's.
+    I fitted exponential trends to these
+    attack_time_s(x) = 0.324 exp(0.00237 x)
+    x = 421.5 ln(3.09 * attack_time_s)
+    decay_time_s(x) = 0.0613 exp(0.00589 x)
+    x = 169.8 ln(16.3 * decay_time_s
+
+    Timings (s) of the XD's 1-shot saw/fall time
+    R  |  0   512  1023
+    --------------------
+    (s)| 10  1.02  0.02
+
+    fall_time_s(x) = 13.17 exp(-0.006 x)
+    x = -167 ln(0.076 * fall_time_s)
+"""
+attack_to_s = lambda x: 0.324 * exp(0.00237 * x)
+decay_to_s = lambda x: 0.0613 * exp(0.00589 * x)
+s_rate = lambda x: clip(int(-167 * log(0.076 * x)), 0, 1023)
+
+
+def eg_and_lfo_mapping(src):
+    # Scale all EG and LFO amount from 0.0 to 1.0
+    c = abs(src.cutoff_eg_int - 512) / 512.0        # (492+532)/2=512; abs(a-512)/508
+    d = abs(src.vco_2_pitch_eg_int - 512) / 512.0   # abs(a-512)/508
+    e = src.lfo_int / 1023.0                        # 0~1023; a/1023
+
+    # Sort EG and LFO amounts
+    resourcepool = {'eg_to_cutoff':c, 'eg_to_pitch':d, 'lfo':e}
+    resources = sorted(resourcepool, key=resourcepool.get)
+    # remove lowest priority, prioritising lfo lowest in the case of equality
+    if resourcepool[resources[0]] == resourcepool['lfo']:
+        resources.remove('lfo')
+    else:
+        resources.pop(0)
+
+    # allocate our resources
+    if 'lfo' in resources:
+        # we need to use the XD's lfo
+        # LFO -> OG target
+        lfo_target = src.lfo_target
+        lfo_target_osc = 0  # LFO TARGET OSC = 0:ALL, 1:VCO1+VCO2, 2:VCO2, 3:MULTI
+        # LFO MODE 0~2=1-SHOT,NORMAL,BPM
+        lfo_mode = 1 if src.lfo_bpm_sync == 0 else 2
+        lfo_wave = src.lfo_wave
+        lfo_int = 512 + int(src.lfo_int / 2)
+        lfo_rate = src.lfo_rate
+
+        # now allocate the XD's EG
+        eg_int = src.cutoff_eg_int
+        if 'eg_to_cutoff' in resources:
+            # EG INT -> CUTOFF
+            eg_target = 0      # EG TARGET 0~2=CUTOFF, PITCH2, PITCH
+        else:
+            # 'eg_to_pitch'
+            eg_target = 1      # EG TARGET 0~2=CUTOFF, PITCH2, PITCH
+
+    else:
+        # The lfo is free; send EG INT -> CUTOFF and LFO-1-SHOT -> PITCH 2
+
+        # LFO-1-SHOT -> PITCH 2
+        lfo_target = 2     # LFO TARGET 0~2=CUTOFF,SHAPE,PITCH
+        lfo_target_osc = 2 # LFO TARGET OSC = 0:ALL, 1:VCO1+VCO2, 2:VCO2, 3:MULTI
+        lfo_mode = 0       # LFO MODE 0~2=1-SHOT,NORMAL,BPM
+        # Translate the LFO RATE value from the EG AD values
+        # Choose saw or triangle
+        if src.eg_attack / (src.eg_attack + src.eg_decay) < 0.25:
+            lfo_wave = 2    # saw
+        else:
+            lfo_wave = 1    # triangle
+        # Choose sign of lfo_int; the og encodes -4800 cent but I'll ignore this for now
+        # See minilogue OG MIDIimp_rev1p10 note P3 (VCO 2 PITCH EG Int)
+        lfo_int = src.vco_2_pitch_eg_int
+        eg_ad_length_s = attack_to_s(src.eg_attack) + decay_to_s(src.eg_decay)
+        lfo_rate = s_rate(eg_ad_length_s)
+
+        # EG INT -> CUTOFF
+        eg_int = src.cutoff_eg_int
+        eg_target = 0      # EG TARGET 0~2=CUTOFF, PITCH2, PITCH
+
+    return lfo_target, lfo_target_osc, lfo_mode, lfo_wave, lfo_int, lfo_rate, eg_int, eg_target
+
+
+# OG VCO 2 PITCH EG Int
+# OG Owner's Guide says the knob encodes values from -4800 to 4800 but the midi guide
+# says
+#     0    ~    4 : -4800 (Cent)
+#     4    ~  356 : -4800 ~ -1024 (Cent)
+#     356  ~  476 : -1024 ~   -64 (Cent)
+#     476  ~  492 :   -64 ~     0 (Cent)
+#     492  ~  532 :     0 (Cent)
+#     532  ~  548 :     0 ~    64 (Cent)
+#     548  ~  668 :    64 ~  1024 (Cent)
+#     668  ~ 1020 :   256 ~  1200 (Cent)
+#     1020 ~ 1023 :  1200 (Cent)
+
+# OG CUTOFF EG INT and XD EG INT
+#     0   ~ 11   : -100 (%)
+#     11  ~ 492  : - ((492 - value) * (492 - value) * 4641 * 100) / 0x40000000 (%)
+#     492 ~ 532  : 0 (%)
+#     532 ~ 1013 : ((value - 532) * (value - 532) * 4641 * 100) / 0x40000000 (%)
+#     1013~1023  : 100 (%)
+
+
+class ComputeOnce():
+    """The fields of this class are interdependent. The first attempt to access any
+    field by calling the associated method will compute all fields. Subsequent accesses
+    via any of the methods just retrieve the already computed value.
+
+    """
+    def __init__(self):
+        self.run = False
+
+    def first(self, src):
+        if not self.run:
+            self.run = True
+            (
+                self.lfo_target,
+                self.lfo_target_osc,
+                self.lfo_mode,
+                self.lfo_wave,
+                self.lfo_int,
+                self.lfo_rate,
+                self.eg_int,
+                self.eg_target,
+            ) = eg_and_lfo_mapping(src)
+
+    def fn_lfo_target(self, src):
+        self.first(src)
+        return self.lfo_target
+    
+    def fn_lfo_target_osc(self, src):
+        self.first(src)
+        return self.lfo_target_osc
+    
+    def fn_lfo_mode(self, src):
+        self.first(src)
+        return self.lfo_mode
+
+    def fn_lfo_wave(self, src):
+        self.first(src)
+        return self.lfo_wave
+
+    def fn_lfo_int(self, src):
+        self.first(src)
+        return self.lfo_int
+
+    def fn_lfo_rate(self, src):
+        self.first(src)
+        return self.lfo_rate
+
+    def fn_eg_int(self, src):
+        self.first(src)
+        return self.eg_int
+
+    def fn_eg_target(self, src):
+        self.first(src)
+        return self.eg_target
+
+
+once = ComputeOnce()
+
 patch_translation_value = namedtuple("Field", ["name", "type", "source"])
 
 """
@@ -68,7 +297,7 @@ minilogue_xd_patch_struct = (
     ("str_PROG", "4s", "str_PROG"),
     ("program_name", "12s", "program_name"),
     ("octave", "B", "keyboard_octave"),
-    ("portamento", "B", "portamento_time"),
+    ("portamento", "B", fn_portamento_time),
     ("key_trig", "B", 0),
     ("voice_mode_depth", "H", fn_voice_mode_depth),
     ("voice_mode_type", "B", fn_voice_mode_type),
@@ -105,15 +334,15 @@ minilogue_xd_patch_struct = (
     ("amp_eg_decay", "H", "amp_eg_decay"),
     ("amp_eg_sustain", "H", "amp_eg_sustain"),
     ("amp_eg_release", "H", "amp_eg_release"),
-    ("eg_attack", "H", "amp_attack"),
-    ("eg_decay", "H", "amp_decay"),
-    ("eg_int", "H", "cutoff_eg_int"),
-    ("eg_target", "B", fn_target),
-    ("lfo_wave", "B", "lfo_wave"),
-    ("lfo_mode", "B", fn_lfo_mode),
-    ("lfo_rate", "H", "lfo_rate"),
-    ("lfo_int", "H", "lfo_int"),
-    ("lfo_target", "B", "lfo_target"),
+    ("eg_attack", "H", "eg_attack"),
+    ("eg_decay", "H", "eg_decay"),
+    ("eg_int", "H", once.fn_eg_int),
+    ("eg_target", "B", once.fn_eg_target),
+    ("lfo_wave", "B", once.fn_lfo_wave),
+    ("lfo_mode", "B", once.fn_lfo_mode),
+    ("lfo_rate", "H", once.fn_lfo_rate),
+    ("lfo_int", "H", once.fn_lfo_int),
+    ("lfo_target", "B", once.fn_lfo_target),
     ("mod_fx_on_off", "B", 0),
     ("mod_fx_type", "B", 0),
     ("mod_fx_chorus", "B", 0),
@@ -148,12 +377,12 @@ minilogue_xd_patch_struct = (
     ("program_tuning", "B", 50),
     ("lfo_key_sync", "B", "lfo_key_sync"),
     ("lfo_voice_sync", "B", "lfo_voice_sync"),
-    ("lfo_target_osc", "B", 0),
+    ("lfo_target_osc", "B", once.fn_lfo_target_osc),
     ("cutoff_velocity", "B", fn_cutoff_velocity),
     ("amp_velocity", "B", "amp_velocity"),
     ("multi_octave", "B", fn_multi_octave),
     ("multi_routing", "B", 0),
-    ("eg_legato", "B", 0),
+    ("eg_legato", "B", fn_eg_legato),
     ("portamento_mode", "B", "portamento_mode"),
     ("portamento_bpm_sync", "B", "portamento_bpm"),
     ("program_level", "B", 102),
@@ -182,7 +411,7 @@ minilogue_xd_patch_struct = (
     ("bpm", "H", "bpm"),
     ("step_length", "B", "step_length"),
     ("step_resolution", "B", "step_resolution"),
-    ("swing", "B", "swing"),
+    ("swing", "B", fn_swing),
     ("default_gate_time", "B", "default_gate_time"),
     ("step1_16", "<H", "step1_16"),
     ("step1_16_motion", "<H", 0),  # Fix this
