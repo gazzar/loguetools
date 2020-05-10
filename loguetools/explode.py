@@ -29,7 +29,7 @@ def sanitise_patchname(filepath):
         Path: Sanitised path
 
     """
-    stem = re.sub(r"[^\w\-_\.]", "_", filepath.stem)
+    stem = re.sub(r"[^\w\-+]", "_", filepath.stem)
     if filepath.stem in filenames:
         filenames[filepath.stem] = filenames[filepath.stem] + 1
         stem = f"{stem}-{filenames[filepath.stem]}"
@@ -73,11 +73,9 @@ def explode(filename, match_name, match_ident):
         prgname = common.program_name(patchdata)
         if prgname == "Init Program":
             continue
-        output_path = (dir_path / prgname).with_suffix(".mnlgxdprog")
+        output_path = (dir_path / (prgname + ".mnlgxdprog"))
         output_path = sanitise_patchname(output_path)
         with ZipFile(output_path, "w") as xdzip:
-            print(f"{int(p[5:8])+1:03d}: {prgname}")
-
             binary_xd = zipobj.read(p)
 
             # .prog_bin record/file
@@ -89,7 +87,7 @@ def explode(filename, match_name, match_ident):
             # FileInformation.xml record/file
             xdzip.writestr(f"FileInformation.xml", xd.fileinfo_xml([0]))
 
-        print("Wrote", output_path)
+        print(f"{int(p[5:8])+1:03d}: {prgname:<12s}  ->  {output_path}")
 
 
 if __name__ == "__main__":
