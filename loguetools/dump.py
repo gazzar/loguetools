@@ -51,6 +51,8 @@ def dump(filename, match_name, match_ident, verbose, md5):
         print(f"{int(p[5:8])+1:03d}: {prgname:12s} {checksum}")
         if verbose:
             patch = common.parse_patchdata(patchdata)
+            if common.patch_type(patchdata) == "og":
+                patch = og.normalise_og_patch(patch)
             pprint(vars(patch))
             print()
 
