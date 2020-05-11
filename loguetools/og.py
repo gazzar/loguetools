@@ -1,4 +1,4 @@
-import common
+from loguetools import common
 import struct
 import copy
 from collections import namedtuple

@@ -1,8 +1,7 @@
 import struct
 from types import SimpleNamespace
 import fnmatch
-import xd
-import og
+from loguetools import og, xd
 
 
 class Patch(SimpleNamespace):
