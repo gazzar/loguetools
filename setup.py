@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="loguetools",
-    version="0.1.0",
+    version="0.1.1",
     author="Gary Ruben",
     author_email="gary.ruben@gmail.com",
     description="Korg minilogue family patch manipulation tools",
