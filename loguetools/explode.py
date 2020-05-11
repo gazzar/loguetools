@@ -7,9 +7,7 @@ import struct
 from pprint import pprint
 import pathlib
 import re
-import og
-import xd
-import common
+from loguetools import og, xd, common
 
 
 XD_PATCH_LENGTH = 1024
