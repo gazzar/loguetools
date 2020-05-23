@@ -2,12 +2,41 @@ import struct
 from types import SimpleNamespace
 import fnmatch
 from loguetools import og, xd
+import re
 
 
 class Patch(SimpleNamespace):
     """A simple container class for patch data."""
 
     pass
+
+
+class sanitise_patchname():
+    """Generate a sensible patch filename stem.
+    Replaces whitespace with underscores and ensures all names are unique.
+    If a patch name has already been encountered during bank export, if encountered
+    again, the new name is munged by appending a hyphen and unique number.
+
+    Args:
+        filename (str): A filename
+
+    Returns:
+        Path: Sanitised name
+
+    """
+    def __init__(self):
+        self.filenames = {}
+
+    def __call__(self, filename):
+        filename = str(filename)
+        output_name = re.sub(r"[^\w\-+]", "_", filename)
+        if filename in self.filenames:
+            self.filenames[filename] = self.filenames[filename] + 1
+            output_name = f"{output_name}-{self.filenames[filename]}"
+            self.filenames[output_name] = 0
+        else:
+            self.filenames[filename] = 0
+        return output_name
 
 
 def patch_type(data):
