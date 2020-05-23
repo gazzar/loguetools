@@ -1,3 +1,5 @@
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
 from loguetools import common
 import struct
 import copy
@@ -300,6 +302,60 @@ def decode_src_string(src_string):
     if shift > 7:
         shift = -(~shift & 7) - 1  # decode negative part of signed 2's complement
     return src_name, mask, shift
+
+
+prog_info_template = """\
+<?xml version="1.0" encoding="UTF-8"?>
+
+<minilogue_ProgramInformation>
+  <Programmer></Programmer>
+  <Comment></Comment>
+</minilogue_ProgramInformation>
+"""
+
+
+def fileinfo_xml(non_init_patch_ids):
+    """Build FileInformation.xml metadata file.
+
+    Args:
+        non_init_patch_ids (list of ints): 0-based list of non-Init-Program patches
+
+    Returns:
+        str: formatted xml
+
+    """
+    # create the file structure
+    root = ET.Element("KorgMSLibrarian_Data")
+    product = ET.SubElement(root, "Product")
+    product.text = "minilogue"
+    contents = ET.SubElement(root, "Contents")
+
+    contents.set("NumProgramData", str(len(non_init_patch_ids)))
+    contents.set("NumPresetInformation", "0")
+    contents.set("NumTuneScaleData", "0")
+    contents.set("NumTuneOctData", "0")
+
+    if len(non_init_patch_ids) <= 1:
+        contents.set("NumFavoriteData", "0")
+    else:
+        contents.set("NumFavoriteData", "1")
+        fave = ET.SubElement(contents, "FavoriteData")
+        fave_info = ET.SubElement(fave, "File")
+        fave_info.text = "FavoriteData.fav_data"
+
+    for i in non_init_patch_ids:
+        prog = ET.SubElement(contents, "ProgramData")
+        prog_info = ET.SubElement(prog, "Information")
+        prog_info.text = f"Prog_{i:03d}.prog_info"
+        prog_bin = ET.SubElement(prog, "ProgramBinary")
+        prog_bin.text = f"Prog_{i:03d}.prog_bin"
+
+    # https://stackoverflow.com/a/3095723
+    formatted_xml = minidom.parseString(
+        ET.tostring(root, encoding="utf-8", method="xml")
+    ).toprettyxml(indent="  ")
+
+    return formatted_xml
 
 
 """
