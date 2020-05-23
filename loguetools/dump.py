@@ -4,7 +4,7 @@ import zipfile
 import struct
 from pprint import pprint
 import hashlib
-from loguetools import og, xd, common
+from loguetools import og, common
 
 
 @click.command()
