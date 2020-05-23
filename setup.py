@@ -1,11 +1,12 @@
 import setuptools
+import version
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="loguetools",
-    version="0.1.1",
+    version=version.__version__,
     author="Gary Ruben",
     author_email="gary.ruben@gmail.com",
     description="Korg minilogue family patch manipulation tools",
