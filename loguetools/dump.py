@@ -7,6 +7,13 @@ import hashlib
 from loguetools import og, common
 
 
+def print_patch(patchdata):
+    patch = common.parse_patchdata(patchdata)
+    if common.patch_type(patchdata) == "og":
+        patch = og.normalise_og_patch(patch)
+    pprint(vars(patch))
+
+
 @click.command()
 @click.argument("filename", type=click.File("rb"))
 @click.option("--match_name", "-n", help="Dump the patch with name NAME")
@@ -48,10 +55,7 @@ def dump(filename, match_name, match_ident, verbose, md5):
             checksum = hashlib.md5(patchdata).hexdigest()
         print(f"{int(p[5:8])+1:03d}: {prgname:12s} {checksum}")
         if verbose:
-            patch = common.parse_patchdata(patchdata)
-            if common.patch_type(patchdata) == "og":
-                patch = og.normalise_og_patch(patch)
-            pprint(vars(patch))
+            print_patch(patchdata)
             print()
 
 
