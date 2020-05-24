@@ -1,8 +1,11 @@
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
 import struct
 from types import SimpleNamespace
 import fnmatch
 from loguetools import og, xd
 import re
+import textwrap
 
 
 class Patch(SimpleNamespace):
@@ -39,23 +42,109 @@ class sanitise_patchname():
         return output_name
 
 
+def prog_info_template(flavour):
+    """
+
+    Args:
+        flavour: "xd", "og", "prologue"
+            choose "xd", "minilogue", "prologue"
+
+    Returns:
+        str: formatted xml
+
+    """
+    flavour_tx = {"xd":"xd", "og":"minilogue", "prologue":"prologue"}
+    ident = flavour_tx[flavour]
+    prog_info_template = textwrap.dedent(f"""\
+        <?xml version="1.0" encoding="UTF-8"?>
+
+        <{ident}_ProgramInformation>
+          <Programmer></Programmer>
+          <Comment></Comment>
+        </{ident}_ProgramInformation>
+        """)
+
+    return prog_info_template
+
+
+def fileinfo_xml(flavour, non_init_patch_ids):
+    """Build FileInformation.xml metadata file.
+
+    Args:
+        flavour: 
+        non_init_patch_ids (list of ints): 0-based list of non-Init-Program patches
+
+    Returns:
+        str: formatted xml
+
+    """
+    # create the file structure
+    root = ET.Element("KorgMSLibrarian_Data")
+    product = ET.SubElement(root, "Product")
+    product.text = {
+        "xd":"minilogue xd",
+        "og":"minilogue",
+        "prologue":"prologue"
+    }[flavour]
+    contents = ET.SubElement(root, "Contents")
+
+    contents.set("NumProgramData", str(len(non_init_patch_ids)))
+    contents.set("NumPresetInformation", "0")
+    contents.set("NumTuneScaleData", "0")
+    contents.set("NumTuneOctData", "0")
+
+    if len(non_init_patch_ids) <= 1:
+        contents.set("NumFavoriteData", "0")
+    else:
+        contents.set("NumFavoriteData", "1")
+        fave = ET.SubElement(contents, "FavoriteData")
+        fave_info = ET.SubElement(fave, "File")
+        fave_info.text = "FavoriteData.fav_data"
+
+    for i in non_init_patch_ids:
+        prog = ET.SubElement(contents, "ProgramData")
+        prog_info = ET.SubElement(prog, "Information")
+        prog_info.text = f"Prog_{i:03d}.prog_info"
+        prog_bin = ET.SubElement(prog, "ProgramBinary")
+        prog_bin.text = f"Prog_{i:03d}.prog_bin"
+
+    # https://stackoverflow.com/a/3095723
+    formatted_xml = minidom.parseString(
+        ET.tostring(root, encoding="utf-8", method="xml")
+    ).toprettyxml(indent="  ")
+
+    return formatted_xml
+
+
 def patch_type(data):
-    """Identify patch data as being a minilogue xd or og patch by attempting to read
-    from a location that is only valid for the xd.
+    """Identify patch data as being a minilogue xd, minilogue og, or prologue patch by
+    attempting to read from locations valid only for the prologue, then if that fails,
+    the xd. xd, og, and Prologue patches are 1780, 448, and 336 bytes long
 
     Args:
         data (packed binary string): patch data
 
     Returns:
-        str: One of {"xd", "og"}
+        str: One of {"xd", "og", "prologue"}
 
     """
     try:
-        struct.unpack_from("B", data, offset=1000)
-        minilogue_type = "xd"
+        struct.unpack_from("B", data, offset=1779)
+        return "xd"
     except struct.error:
-        minilogue_type = "og"
-    return minilogue_type
+        pass
+
+    try:
+        struct.unpack_from("B", data, offset=447)
+        return "og"
+    except struct.error:
+        pass
+
+    try:
+        struct.unpack_from("B", data, offset=335)
+        return "prologue"
+    except struct.error:
+        pass
 
 
 def id_from_name(zipobj, name):

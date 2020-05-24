@@ -70,13 +70,16 @@ class MyFrame(MainFrame):
         self.toolbar.EnableTool(wx.ID_SAVE, False)
         self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, False)
 
+        self.logue_type = None
+
     def OnLoadFile(self, event):
         """Load/Save/etc buttons (in controls area)
         """
         # otherwise ask the user what new file to open
         with wx.FileDialog(
             self, "Choose a file",
-            wildcard="xd packs (*.mnlgxdlib)|*.mnlgxdlib|og packs (*.mnlgpreset)|*.mnlgpreset",
+            wildcard=\
+                "xd packs (*.mnlgxdlib)|*.mnlgxdlib|og packs (*.mnlgpreset)|*.mnlgpreset|prologue packs (*.prlglib)|*.prlglib",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
         ) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -92,9 +95,14 @@ class MyFrame(MainFrame):
                     self.toolbar.EnableTool(wx.ID_SAVE, False)
                     self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, False)
                     if pathlib.Path(self.file).suffix == ".mnlgxdlib":
+                        self.logue_type = "xd"
                         self.toolbar.EnableTool(wx.ID_SAVE, True)
                     elif pathlib.Path(self.file).suffix == ".mnlgpreset":
+                        self.logue_type = "og"
                         self.toolbar.EnableTool(wx.ID_CONVERT, True)
+                        self.toolbar.EnableTool(wx.ID_SAVE, True)
+                    elif pathlib.Path(self.file).suffix == ".prlglib":
+                        self.logue_type = "prologue"
                         self.toolbar.EnableTool(wx.ID_SAVE, True)
             except IOError:
                 wx.LogError("Cannot open file '%s'." % pathname)
@@ -118,7 +126,8 @@ class MyFrame(MainFrame):
             lc.Append([i+1, prgname, hash[:4]])
 
     def OnPatchFocused(self, event):
-        self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, True)
+        if self.logue_type in {"og", "xd"}:
+            self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, True)
 
     def OnPatchDeselected(self, event):
         self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, False)
@@ -153,8 +162,9 @@ class MyFrame(MainFrame):
         aboutInfo.SetVersion(version.__version__)
         aboutInfo.SetDescription(
             textwrap.dedent(
-                """Tools for Korg minilogue and minilogue xd program banks
-                                       by Gary Ruben
+                """Tools for Korg minilogue, prologue
+                     and minilogue xd program banks
+                             by Gary Ruben
                 """
             )
         )

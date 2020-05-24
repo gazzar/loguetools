@@ -103,7 +103,7 @@ def translate(filename, match_name, match_ident, verbose):
             xdzip.writestr(f"Prog_{i:03d}.prog_bin", binary_xd)
 
             # .prog_info record/file
-            xdzip.writestr(f"Prog_{i:03d}.prog_info", xd.prog_info_template)
+            xdzip.writestr(f"Prog_{i:03d}.prog_info", common.prog_info_template("xd"))
 
             if verbose:
                 pprint(vars(patch))
@@ -114,7 +114,7 @@ def translate(filename, match_name, match_ident, verbose):
             xdzip.writestr(f"FavoriteData.fav_data", xd.favorite_template)
 
         # FileInformation.xml record/file
-        xdzip.writestr(f"FileInformation.xml", xd.fileinfo_xml(non_init_patch_ids))
+        xdzip.writestr(f"FileInformation.xml", common.fileinfo_xml("xd", non_init_patch_ids))
 
         print("Wrote", output_file)
 
