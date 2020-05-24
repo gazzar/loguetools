@@ -161,12 +161,11 @@ class MyFrame(MainFrame):
         aboutInfo.SetName("loguetools")
         aboutInfo.SetVersion(version.__version__)
         aboutInfo.SetDescription(
-            textwrap.dedent(
-                """Tools for Korg minilogue, prologue
-                     and minilogue xd program banks
-                             by Gary Ruben
-                """
-            )
+            textwrap.dedent("""
+                Tools for Korg minilogue, prologue
+                and minilogue xd program banks
+                Author: Gary Ruben
+                """)
         )
         aboutInfo.SetCopyright("3-clause BSD licence")
         aboutInfo.SetWebSite("https://github.com/gazzar/loguetools")
