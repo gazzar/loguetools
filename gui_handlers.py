@@ -116,7 +116,7 @@ class MyFrame(MainFrame):
         lc.AppendColumn("id")
         lc.AppendColumn("name")
         lc.AppendColumn("md5:4")
-        lc.SetColumnWidth(0, 30)
+        lc.SetColumnWidth(0, 40)
         lc.SetColumnWidth(1, 200)
         lc.SetColumnWidth(2, 50)
         for i, p in enumerate(self.proglist):
