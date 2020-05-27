@@ -14,12 +14,6 @@ def print_patch(patchdata):
     pprint(vars(patch))
 
 
-@click.command()
-@click.argument("filename", type=click.File("rb"))
-@click.option("--match_name", "-n", help="Dump the patch with name NAME")
-@click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
-@click.option("--verbose", "-v", is_flag=True, help="List the patch contents")
-@click.option("--md5", "-m", is_flag=True, help="List patch checksums")
 def dump(filename, match_name, match_ident, verbose, md5):
     """Dump contents of FILENAME to stdout. Supports minilogue og and xd patch files.
 
@@ -59,5 +53,16 @@ def dump(filename, match_name, match_ident, verbose, md5):
             print()
 
 
+@click.command()
+@click.argument("filename", type=click.File("rb"))
+@click.option("--match_name", "-n", help="Dump the patch with name NAME")
+@click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
+@click.option("--verbose", "-v", is_flag=True, help="List the patch contents")
+@click.option("--md5", "-m", is_flag=True, help="List patch checksums")
+def click_dump(filename, match_name, match_ident, verbose, md5):
+    dump(filename, match_name, match_ident, verbose, md5)
+
+
+
 if __name__ == "__main__":
-    dump()
+    click_dump()

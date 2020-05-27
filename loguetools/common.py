@@ -116,6 +116,34 @@ def fileinfo_xml(flavour, non_init_patch_ids):
     return formatted_xml
 
 
+def file_type(suffix):
+    """Identify file data as being a minilogue xd, minilogue og, or prologue patch by
+    suffix and whether it is a single patch or collection.
+
+    Args:
+        suffix (str): One of .mnlgxdlib, .mnlgxdprog, .mnlgpreset, .mnlgprog,
+            .prlglib, or *.prlgprog
+
+    Returns:
+        str: One of {"xd", "og", "prologue"}
+        bool: True iff suffix is a collection
+
+    """
+    assert suffix in {
+        ".mnlgxdlib", ".mnlgxdprog", ".mnlgpreset", ".mnlgprog", ".prlglib", ".prlgprog"
+    }
+    if suffix in {".mnlgxdlib", ".mnlgxdprog"}:
+        logue_type = "xd"
+    if suffix in {".mnlgpreset", ".mnlgprog"}:
+        logue_type = "og"
+    if suffix in {".prlglib", ".prlgprog"}:
+        logue_type = "prologue"
+    if suffix in {".mnlgxdlib", ".mnlgpreset", ".prlglib"}:
+        collection = True
+    else:
+        collection = False
+    return logue_type, collection
+
 def patch_type(data):
     """Identify patch data as being a minilogue xd, minilogue og, or prologue patch by
     attempting to read from locations valid only for the prologue, then if that fails,

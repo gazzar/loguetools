@@ -47,12 +47,7 @@ def convert_og_to_xd(patch):
     return patch_xd, binary_xd
 
 
-@click.command()
-@click.argument("filename", type=click.Path(exists=True))
-@click.option("--match_name", "-n", help="Dump the patch with name NAME")
-@click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
-@click.option("--verbose", "-v", is_flag=True, help="List the patch contents")
-def translate(filename, match_name, match_ident, verbose):
+def translate(filename, match_name, match_ident, verbose, unskip_init):
     """Translate a minilogue program or program bank to the minilogue xd.
 
     \b
@@ -70,9 +65,11 @@ def translate(filename, match_name, match_ident, verbose):
     input_file = pathlib.Path(filename)
     assert input_file.suffix in {".mnlgprog", ".mnlgpreset"}
     if input_file.suffix == ".mnlgprog":
+        # single patch/program
         match_name = input_file
         match_ident = 1
     elif match_name is not None:
+        # patch library/program pack
         match_ident = common.id_from_name(zipobj, match_name)
 
     if match_ident is not None:
@@ -90,7 +87,7 @@ def translate(filename, match_name, match_ident, verbose):
         for i, p in enumerate(proglist):
             patchdata = zipobj.read(p)
             prgname = common.program_name(patchdata)
-            if prgname == "Init Program":
+            if (prgname == "Init Program") and (not unskip_init):
                 continue
             non_init_patch_ids.append(i)
             print(f"{int(p[5:8])+1:03d}: {prgname}")
@@ -119,5 +116,15 @@ def translate(filename, match_name, match_ident, verbose):
         print("Wrote", output_file)
 
 
+@click.command()
+@click.argument("filename", type=click.Path(exists=True))
+@click.option("--match_name", "-n", help="Dump the patch with name NAME")
+@click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
+@click.option("--verbose", "-v", is_flag=True, help="List the patch contents")
+@click.option("--unskip_init", "-u", is_flag=True, help="Don't skip patches named Init Program")
+def click_translate(filename, match_name, match_ident, verbose, unskip_init):
+    translate(filename, match_name, match_ident, verbose, unskip_init)
+
+
 if __name__ == "__main__":
-    translate()
+    click_translate()

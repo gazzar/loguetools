@@ -3,18 +3,16 @@ import sys
 import click
 from zipfile import ZipFile, ZIP_DEFLATED
 import pathlib
+import hashlib
 import re
 from loguetools import og, xd, common
+import version
 
 
 XD_PATCH_LENGTH = 1024
 
 
-@click.command()
-@click.argument("filename", type=click.Path(exists=True))
-@click.option("--match_name", "-n", help="Dump the patch with name NAME")
-@click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
-def explode(filename, match_name, match_ident):
+def explode(filename, match_name, match_ident, append_md5_4, append_version, unskip_init):
     """Explode a minilogue og or xd or prologue program bank or extract a program.
 
     \b
@@ -54,8 +52,14 @@ def explode(filename, match_name, match_ident):
     for i, p in enumerate(proglist):
         patchdata = zipobj.read(p)
         prgname = common.program_name(patchdata)
-        if prgname == "Init Program":
+        if (prgname == "Init Program") and (not unskip_init):
             continue
+        if append_md5_4:
+            hash = hashlib.md5(patchdata).hexdigest()
+            prgname = f"{prgname}-{hash[:4]}"
+        if append_version:
+            ver = version.__version__.replace(".", "")
+            prgname = f"{prgname}-v{ver}"
         output_path = (dir_path / (sanitise(prgname) + suffix))
         with ZipFile(output_path, "w") as zip:
             binary = zipobj.read(p)
@@ -72,5 +76,16 @@ def explode(filename, match_name, match_ident):
         print(f"{int(p[5:8])+1:03d}: {prgname:<12s}  ->  {output_path}")
 
 
+@click.command()
+@click.argument("filename", type=click.Path(exists=True))
+@click.option("--match_name", "-n", help="Dump the patch with name NAME")
+@click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
+@click.option("--append_md5_4", "-m", is_flag=True, help="Append 4 digits of an md5 checksum to the filename")
+@click.option("--append_version", "-v", is_flag=True, help="Append loguetools version to the filename")
+@click.option("--unskip_init", "-u", is_flag=True, help="Don't skip patches named Init Program")
+def click_explode(filename, match_name, match_ident, append_md5_4, append_version, unskip_init):
+    explode(filename, match_name, match_ident, append_md5_4, append_version, unskip_init)
+
+
 if __name__ == "__main__":
-    explode()
+    click_explode()

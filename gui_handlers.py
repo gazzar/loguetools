@@ -66,9 +66,9 @@ class MyFrame(MainFrame):
         self.Bind(wx.EVT_TOOL, self.OnDump, id=self.tool_dump.GetId())
         self.Bind(wx.EVT_TOOL, self.OnExit, id=self.tool_exit.GetId())
 
-        self.toolbar.EnableTool(wx.ID_CONVERT, False)
-        self.toolbar.EnableTool(wx.ID_SAVE, False)
-        self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, False)
+        self.toolbar.EnableTool(wx.ID_CONVERT, False)       # translate
+        self.toolbar.EnableTool(wx.ID_SAVE, False)          # explode
+        self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, False)  # dump
 
         self.logue_type = None
 
@@ -78,8 +78,12 @@ class MyFrame(MainFrame):
         # otherwise ask the user what new file to open
         with wx.FileDialog(
             self, "Choose a file",
-            wildcard=\
-                "xd packs (*.mnlgxdlib)|*.mnlgxdlib|og packs (*.mnlgpreset)|*.mnlgpreset|prologue packs (*.prlglib)|*.prlglib",
+            wildcard="".join([
+                "patches|",
+                "*.mnlgxdlib;*.mnlgxdprog;",
+                "*.mnlgpreset;*.mnlgprog;",
+                "*.prlglib;*.prlgprog"
+            ]),
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
         ) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -94,16 +98,12 @@ class MyFrame(MainFrame):
                     self.toolbar.EnableTool(wx.ID_CONVERT, False)
                     self.toolbar.EnableTool(wx.ID_SAVE, False)
                     self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, False)
-                    if pathlib.Path(self.file).suffix == ".mnlgxdlib":
-                        self.logue_type = "xd"
+                    self.logue_type, self.is_a_collection = \
+                        common.file_type(pathlib.Path(self.file).suffix)
+                    if self.is_a_collection:
                         self.toolbar.EnableTool(wx.ID_SAVE, True)
-                    elif pathlib.Path(self.file).suffix == ".mnlgpreset":
-                        self.logue_type = "og"
+                    if self.logue_type == "og":
                         self.toolbar.EnableTool(wx.ID_CONVERT, True)
-                        self.toolbar.EnableTool(wx.ID_SAVE, True)
-                    elif pathlib.Path(self.file).suffix == ".prlglib":
-                        self.logue_type = "prologue"
-                        self.toolbar.EnableTool(wx.ID_SAVE, True)
             except IOError:
                 wx.LogError("Cannot open file '%s'." % pathname)
         self.statusBar.SetStatusText(f"Loaded {self.file}")
@@ -125,7 +125,7 @@ class MyFrame(MainFrame):
             hash = hashlib.md5(patchdata).hexdigest()
             lc.Append([i+1, prgname, hash[:4]])
 
-    def OnPatchFocused(self, event):
+    def OnPatchSelected(self, event):
         if self.logue_type in {"og", "xd"}:
             self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, True)
 
@@ -141,16 +141,14 @@ class MyFrame(MainFrame):
         print_sep()
 
     def OnTranslate(self, event):
-        try:
-            translate([self.file])
-        except SystemExit:
-            pass
+        unskip_init = self.m_checkBox_inits.GetValue()
+        translate(self.file, None, None, None, unskip_init)
 
     def OnExplode(self, event):
-        try:
-            explode([self.file])
-        except SystemExit:
-            pass
+        append_md5_4 = self.m_checkBox_md5.GetValue()
+        append_version = self.m_checkBox_version.GetValue()
+        unskip_init = self.m_checkBox_inits.GetValue()
+        explode(self.file, None, None, append_md5_4, append_version, unskip_init)
 
     def OnExit(self, event):
         """Close the frame, terminating the application."""

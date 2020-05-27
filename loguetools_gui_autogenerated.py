@@ -23,10 +23,32 @@ class MainFrame ( wx.Frame ):
 
         bSizer = wx.BoxSizer( wx.VERTICAL )
 
+        gSizer1 = wx.GridSizer( 0, 2, 0, 0 )
+
         self.toolbar = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL )
         self.toolbar.Realize()
 
-        bSizer.Add( self.toolbar, 0, wx.EXPAND, 5 )
+        gSizer1.Add( self.toolbar, 0, wx.EXPAND, 5 )
+
+        self.m_toolBar_options = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL )
+        self.m_checkBox_md5 = wx.CheckBox( self.m_toolBar_options, wx.ID_ANY, u"md5:4", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_checkBox_md5.SetToolTip( u"Append md5 checksum to filename" )
+
+        self.m_toolBar_options.AddControl( self.m_checkBox_md5 )
+        self.m_checkBox_version = wx.CheckBox( self.m_toolBar_options, wx.ID_ANY, u"ver", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_checkBox_version.SetToolTip( u"Append loguetools version to filename" )
+
+        self.m_toolBar_options.AddControl( self.m_checkBox_version )
+        self.m_checkBox_inits = wx.CheckBox( self.m_toolBar_options, wx.ID_ANY, u"Inits", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_checkBox_inits.SetToolTip( u"Include patches named Init Program" )
+
+        self.m_toolBar_options.AddControl( self.m_checkBox_inits )
+        self.m_toolBar_options.Realize()
+
+        gSizer1.Add( self.m_toolBar_options, 0, wx.EXPAND, 5 )
+
+
+        bSizer.Add( gSizer1, 0, wx.EXPAND, 5 )
 
         fgSizer1 = wx.FlexGridSizer( 1, 2, 0, 0 )
         fgSizer1.AddGrowableCol( 0 )
@@ -37,6 +59,7 @@ class MainFrame ( wx.Frame ):
 
         self.m_splitter2 = wx.SplitterWindow( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.SP_3D|wx.SP_LIVE_UPDATE )
         self.m_splitter2.Bind( wx.EVT_IDLE, self.m_splitter2OnIdle )
+        self.m_splitter2.SetMinimumPaneSize( 40 )
 
         self.m_panel1 = wx.Panel( self.m_splitter2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
         bSizer2 = wx.BoxSizer( wx.VERTICAL )
@@ -58,7 +81,7 @@ class MainFrame ( wx.Frame ):
         self.m_panel2.SetSizer( bSizer3 )
         self.m_panel2.Layout()
         bSizer3.Fit( self.m_panel2 )
-        self.m_splitter2.SplitVertically( self.m_panel1, self.m_panel2, 0 )
+        self.m_splitter2.SplitVertically( self.m_panel1, self.m_panel2, 510 )
         fgSizer1.Add( self.m_splitter2, 1, wx.EXPAND, 5 )
 
 
@@ -88,7 +111,7 @@ class MainFrame ( wx.Frame ):
 
         # Connect Events
         self.listCtrl.Bind( wx.EVT_LIST_ITEM_DESELECTED, self.OnPatchDeselected )
-        self.listCtrl.Bind( wx.EVT_LIST_ITEM_FOCUSED, self.OnPatchFocused )
+        self.listCtrl.Bind( wx.EVT_LIST_ITEM_SELECTED, self.OnPatchSelected )
         self.Bind( wx.EVT_MENU, self.OnExit, id = self.m_menuItem21.GetId() )
         self.Bind( wx.EVT_MENU, self.OnAbout, id = self.m_menuItem2.GetId() )
 
@@ -100,7 +123,7 @@ class MainFrame ( wx.Frame ):
     def OnPatchDeselected( self, event ):
         event.Skip()
 
-    def OnPatchFocused( self, event ):
+    def OnPatchSelected( self, event ):
         event.Skip()
 
     def OnExit( self, event ):
@@ -110,7 +133,7 @@ class MainFrame ( wx.Frame ):
         event.Skip()
 
     def m_splitter2OnIdle( self, event ):
-    	self.m_splitter2.SetSashPosition( 0 )
+    	self.m_splitter2.SetSashPosition( 510 )
     	self.m_splitter2.Unbind( wx.EVT_IDLE )
 
 
