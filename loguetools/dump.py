@@ -7,12 +7,13 @@ import hashlib
 from loguetools import og, common
 
 
-@click.command()
-@click.argument("filename", type=click.File("rb"))
-@click.option("--match_name", "-n", help="Dump the patch with name NAME")
-@click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
-@click.option("--verbose", "-v", is_flag=True, help="List the patch contents")
-@click.option("--md5", "-m", is_flag=True, help="List patch checksums")
+def print_patch(patchdata):
+    patch = common.parse_patchdata(patchdata)
+    if common.patch_type(patchdata) == "og":
+        patch = og.normalise_og_patch(patch)
+    pprint(vars(patch))
+
+
 def dump(filename, match_name, match_ident, verbose, md5):
     """Dump contents of FILENAME to stdout. Supports minilogue og and xd patch files.
 
@@ -48,12 +49,20 @@ def dump(filename, match_name, match_ident, verbose, md5):
             checksum = hashlib.md5(patchdata).hexdigest()
         print(f"{int(p[5:8])+1:03d}: {prgname:12s} {checksum}")
         if verbose:
-            patch = common.parse_patchdata(patchdata)
-            if common.patch_type(patchdata) == "og":
-                patch = og.normalise_og_patch(patch)
-            pprint(vars(patch))
+            print_patch(patchdata)
             print()
 
 
+@click.command()
+@click.argument("filename", type=click.File("rb"))
+@click.option("--match_name", "-n", help="Dump the patch with name NAME")
+@click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
+@click.option("--verbose", "-v", is_flag=True, help="List the patch contents")
+@click.option("--md5", "-m", is_flag=True, help="List patch checksums")
+def click_dump(filename, match_name, match_ident, verbose, md5):
+    dump(filename, match_name, match_ident, verbose, md5)
+
+
+
 if __name__ == "__main__":
-    dump()
+    click_dump()
