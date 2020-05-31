@@ -31,7 +31,7 @@ def dump(filename, match_name, match_ident, verbose, md5):
 
     """
     zipobj = zipfile.ZipFile(filename, "r")
-    proglist = common.zip_progbins(zipobj)
+    proglist = common.zipread_progbins(zipobj)
 
     if match_name is not None:
         match_ident = common.id_from_name(zipobj, match_name)
