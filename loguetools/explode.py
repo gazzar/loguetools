@@ -33,16 +33,16 @@ def explode(filename, match_name, match_ident, append_md5_4, append_version, uns
         proglist = [proglist[match_ident - 1]]
 
     # Create directory based on the filename stem
-    input_path = pathlib.Path(filename)
-    dir_path = input_path.with_suffix("")
+    input_file = pathlib.Path(filename)
+    dir_path = input_file.with_suffix("")
     dir_path.mkdir(exist_ok=True)
-    if input_path.suffix in {".mnlgxdpreset", ".mnlgxdlib"}:
+    if input_file.suffix in {".mnlgxdpreset", ".mnlgxdlib"}:
         suffix = ".mnlgxdprog"
         flavour = "xd"
-    elif input_path.suffix in {".mnlgpreset", ".mnlglib"}:
+    elif input_file.suffix in {".mnlgpreset", ".mnlglib"}:
         suffix = ".mnlgprog"
         flavour = "og"
-    elif input_path.suffix in {".prlgpreset", ".prlglib"}:
+    elif input_file.suffix in {".prlgpreset", ".prlglib"}:
         suffix = ".prlgprog"
         flavour = "prologue"
     fileinfo_xml = common.fileinfo_xml(flavour, [0])
@@ -51,7 +51,7 @@ def explode(filename, match_name, match_ident, append_md5_4, append_version, uns
     copyright = None
     author = None
     comment = None
-    if input_path.suffix in {".mnlgxdpreset", ".mnlgpreset", ".prlgpreset"}:
+    if input_file.suffix in {".mnlgxdpreset", ".mnlgpreset", ".prlgpreset"}:
         author, copyright = common.author_copyright_from_presetinformation_xml(zipobj)
 
     sanitise = common.sanitise_patchname()
