@@ -80,9 +80,15 @@ class MyFrame(MainFrame):
             self, "Choose a file",
             wildcard="".join([
                 "patches|",
-                "*.mnlgxdlib;*.mnlgxdprog;",
-                "*.mnlgpreset;*.mnlgprog;",
-                "*.prlglib;*.prlgprog"
+                "*.mnlgxdpreset;*.mnlgxdlib;*.mnlgxdprog;",
+                "*.mnlgpreset;*.mnlglib;*.mnlgprog;",
+                "*.prlgpreset;*.prlglib;*.prlgprog"
+                "|minilogue (.mnlgpreset;.mnlglib;.mnlgprog)|",
+                "*.mnlgpreset;*.mnlglib;*.mnlgprog;",
+                "|minilogue xd (.mnlgxdpreset;.mnlgxdlib;.mnlgxdprog)|",
+                "*.mnlgxdpreset;*.mnlgxdlib;*.mnlgxdprog;",
+                "|prologue (.prlgpreset;.prlglib;.prlgprog)|",
+                "*.prlgpreset;*.prlglib;*.prlgprog"
             ]),
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
         ) as fileDialog:
@@ -110,7 +116,7 @@ class MyFrame(MainFrame):
 
     def LoadData(self, fileobj):
         self.zipobj = ZipFile(fileobj.name, "r", compression=ZIP_DEFLATED, compresslevel=9)
-        self.proglist = common.zip_progbins(self.zipobj)
+        self.proglist = common.zipread_progbins(self.zipobj)
         lc = self.listCtrl
         lc.ClearAll()
         lc.AppendColumn("id")
@@ -123,7 +129,9 @@ class MyFrame(MainFrame):
             patchdata = self.zipobj.read(p)
             prgname = common.program_name(patchdata)
             hash = hashlib.md5(patchdata).hexdigest()
-            lc.Append([i+1, prgname, hash[:4]])
+            flavour = common.patch_type(patchdata)
+            if not common.is_init_patch(flavour, hash):
+                lc.Append([i+1, prgname, hash[:4]])
 
     def OnPatchSelected(self, event):
         if self.logue_type in {"og", "xd"}:
