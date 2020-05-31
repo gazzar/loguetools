@@ -89,7 +89,7 @@ def prog_info_template_xml(flavour, programmer=None, comment=None, copyright=Non
     comment_elem.text = comment
     loguetools_version_elem = ET.SubElement(root, "loguetoolsVersion")
     loguetools_version_elem.text = version.__version__
-    if copyright != "":
+    if copyright is not None:
         copyright_elem = ET.SubElement(root, "Copyright")
         copyright_elem.text = copyright
 
