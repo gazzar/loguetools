@@ -1,6 +1,6 @@
 import click
 from click.testing import CliRunner
-from ..explode import click_explode
+from loguetools.explode import click_explode
 
 
 runner = CliRunner()

@@ -1,7 +1,6 @@
 import click
 from click.testing import CliRunner
-from .. import dump as du
-from ..dump import click_dump
+from loguetools.dump import click_dump
 
 
 runner = CliRunner()
