@@ -3,6 +3,7 @@ import sys
 import pathlib
 import hashlib
 import textwrap
+from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 import version
 import data
@@ -22,6 +23,23 @@ def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
+
+
+class MyFileDropTarget(wx.FileDropTarget):
+    """Drag and drop file loading
+    https://stackoverflow.com/a/31393351
+    
+    """
+    def __init__(self, parent):
+        wx.FileDropTarget.__init__(self)
+        self.parent = parent
+
+    def OnDropFiles(self, x, y, filenames):
+        filepath = filenames[0]
+        if Path(filepath).suffix in common.patch_suffixes | common.lib_suffixes:
+            # validated extension
+            self.parent.loadfile(filepath)
+        return True
 
 
 class MyFrame(MainFrame): 
@@ -72,6 +90,9 @@ class MyFrame(MainFrame):
 
         self.logue_type = None
 
+        file_drop_target = MyFileDropTarget(self)
+        self.listCtrl.SetDropTarget(file_drop_target)
+
     def OnLoadFile(self, event):
         """Load/Save/etc buttons (in controls area)
         """
@@ -97,22 +118,25 @@ class MyFrame(MainFrame):
 
             # Proceed loading the file chosen by the user
             pathname = fileDialog.GetPath()
-            try:
-                with open(pathname, 'r') as fileobj:
-                    self.LoadData(fileobj)
-                    self.file = fileobj.name
-                    self.toolbar.EnableTool(wx.ID_CONVERT, False)
-                    self.toolbar.EnableTool(wx.ID_SAVE, False)
-                    self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, False)
-                    self.logue_type, self.is_a_collection = \
-                        common.file_type(pathlib.Path(self.file).suffix)
-                    if self.is_a_collection:
-                        self.toolbar.EnableTool(wx.ID_SAVE, True)
-                    if self.logue_type == "og":
-                        self.toolbar.EnableTool(wx.ID_CONVERT, True)
-            except IOError:
-                wx.LogError("Cannot open file '%s'." % pathname)
-        self.statusBar.SetStatusText(f"Loaded {self.file}")
+            self.loadfile(pathname)
+
+    def loadfile(self, pathname):
+        try:
+            with open(pathname, 'r') as fileobj:
+                self.LoadData(fileobj)
+                self.file = fileobj.name
+                self.toolbar.EnableTool(wx.ID_CONVERT, False)
+                self.toolbar.EnableTool(wx.ID_SAVE, False)
+                self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, False)
+                self.logue_type, self.is_a_collection = \
+                    common.file_type(pathlib.Path(self.file).suffix)
+                if self.is_a_collection:
+                    self.toolbar.EnableTool(wx.ID_SAVE, True)
+                if self.logue_type == "og":
+                    self.toolbar.EnableTool(wx.ID_CONVERT, True)
+                self.statusBar.SetStatusText(f"Loaded {self.file}")
+        except IOError:
+            wx.LogError("Cannot open file '%s'." % pathname)
 
     def LoadData(self, fileobj):
         self.zipobj = ZipFile(fileobj.name, "r", compression=ZIP_DEFLATED, compresslevel=9)
