@@ -11,6 +11,56 @@ def twos_comp(val, bits):
     return val
 
 
+og_motion_to_xd = {
+     0:  0,     # None
+    17: 20,     # VCO 1 PITCH
+    18: 21,     # VCO 1 SHAPE
+    19: 18,     # : 19? VCO 1 OCTAVE **og WAVE maybe
+    20: 19,     # : 18? VCO 1 OCTAVE **one of these might be WAVE
+    21: 24,     # VCO 2 PITCH
+    22: 25,     # VCO 2 SHAPE  *docs say VCO 1
+    23: 22,     # : 23? VCO 1 OCTAVE *docs say VCO 1
+    24: 23,     # : 22? VCO 1 OCTAVE *docs say VCO 1
+    25: 28,     # CROSS MOD
+    26:  0,     # PITCH EG INT
+    27: 26,     # SYNC
+    28: 27,     # RING
+    29: 39,     # VCO 1 LEVEL
+    30: 40,     # VCO 2 LEVEL
+    31: 41,     # NOISE LEVEL * mapped to multi-engine level
+    32: 42,     # CUTOFF
+    33: 43,     # RESONANCE
+    34:  0,     # CUTOFF EG INT
+    35:  0,     # CUTOFF VELOCITY TRACK
+    36: 45,     # CUTOFF KEYBOARD TRACK
+    37:  0,     # CUTOFF TYPE
+    40: 46,     # AMP EG ATTACK
+    41: 47,     # AMP EG DECAY
+    42: 48,     # AMP EG SUSTAIN
+    43: 49,     # AMP EG RELEASE
+    44: 50,     # EG ATTACK
+    45: 51,     # EG DECAY
+    46:  0,     # EG SUSTAIN
+    47:  0,     # EG RELEASE
+    48: 56,     # LFO RATE
+    49: 57,     # LFO INT
+    50: 58,     # LFO TARGET
+    51: 57,     # LFO EG
+    52: 54,     # LFO TYPE
+    53:  0,     # DELAY OUTPUT ROUTING
+    55:  0,     # DELAY HI PASS CUTOFF
+    56: 70,     # DELAY TIME
+    57: 71,     # DELAY FEEDBACK
+    61: 126,     # PITCH BEND
+    62: 129,     # GATE TIME
+}
+
+
+fn_motion_slot_1_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_1_1_parameter, 0)
+fn_motion_slot_2_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_2_1_parameter, 0)
+fn_motion_slot_3_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_3_1_parameter, 0)
+fn_motion_slot_4_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_4_1_parameter, 0)
+
 # Simple translation functions
 fn_delay_on_off = lambda src: 0 if src.delay_output_routing == 0 else 1
 fn_str_pred = lambda src: "PRED"
@@ -66,6 +116,26 @@ def fn_voice_mode_depth(src):
         return 0
     else:
         return src.voice_mode_depth
+
+
+def fn_translate_step_data(og_step_data):
+    xd_buffer = bytearray(52 * b"\x00")
+    # notes
+    xd_buffer[0:4] = og_step_data[0:4]
+    # note velocities
+    xd_buffer[8:12] = og_step_data[4:8]
+    # gates and triggers
+    xd_buffer[16:20] = og_step_data[8:12]
+    # motion data; xd is 10 bit and og is 8-bit; not I'm not sure if I should shift them
+    # I think I will just copy across to slots 0-3
+    xd_buffer[24:26] = og_step_data[12:14]
+    xd_buffer[31:33] = og_step_data[14:16]
+    xd_buffer[38:40] = og_step_data[16:18]
+    xd_buffer[45:47] = og_step_data[18:20]
+    return xd_buffer
+
+
+fn_step_1_event_data = lambda src: fn_translate_step_data(src.step_1_event_data)
 
 
 """
@@ -287,7 +357,7 @@ the forms
 
 ('label', 'binary-format string', 'src1_name')
 ('label', 'binary-format string', p), where p is an integer
-('label', 'binary-format string', f, arg1, ..., argN), where f is a function with optional args
+('label', 'binary-format string', f), where f is a function
 
 """
 minilogue_xd_patch_struct = (
@@ -413,16 +483,20 @@ minilogue_xd_patch_struct = (
     ("default_gate_time", "B", "default_gate_time"),
     ("step1_16", ">H", "step1_16"),
     ("step1_16_motion", ">H", "step1_16_switch"),  # I think this is the corresponding param
-    ("motion_slot_1_parameter", ">H", "motion_slot_1_parameter"),
-    ("motion_slot_2_parameter", ">H", "motion_slot_2_parameter"),
-    ("motion_slot_3_parameter", ">H", "motion_slot_3_parameter"),
-    ("motion_slot_4_parameter", ">H", "motion_slot_4_parameter"),
+    ("motion_slot_1_0_parameter", "B", "motion_slot_1_0_parameter"),
+    ("motion_slot_1_1_parameter", "B", fn_motion_slot_1_parameter),
+    ("motion_slot_2_0_parameter", "B", "motion_slot_2_0_parameter"),
+    ("motion_slot_2_1_parameter", "B", fn_motion_slot_2_parameter),
+    ("motion_slot_3_0_parameter", "B", "motion_slot_3_0_parameter"),
+    ("motion_slot_3_1_parameter", "B", fn_motion_slot_3_parameter),
+    ("motion_slot_4_0_parameter", "B", "motion_slot_4_0_parameter"),
+    ("motion_slot_4_1_parameter", "B", fn_motion_slot_4_parameter),
     ("motion_slot_1_step1_16", ">H", "motion_slot_1_step1_16"),
     ("motion_slot_2_step1_16", ">H", "motion_slot_2_step1_16"),
     ("motion_slot_3_step1_16", ">H", "motion_slot_3_step1_16"),
     ("motion_slot_4_step1_16", ">H", "motion_slot_4_step1_16"),
     # 190
-    ("step_1_event_data", "52p", 52 * b"\x00"),  # Fix/translate these
+    ("step_1_event_data", "52p", fn_step_1_event_data),  # Fix/translate these
     ("step_2_event_data", "52p", 52 * b"\x00"),
     ("step_3_event_data", "52p", 52 * b"\x00"),
     ("step_4_event_data", "52p", 52 * b"\x00"),
@@ -471,313 +545,145 @@ favorite_template = """\
 </xd_Favorite>
 """
 
-og_to_xd = {
-     0:  0,     # None
-    17: 20,     # VCO 1 PITCH
-    18: 21,     # VCO 1 SHAPE
-    19: 18,     # : 19? VCO 1 OCTAVE **og WAVE maybe
-    20: 19,     # : 18? VCO 1 OCTAVE **one of these might be WAVE
-    21: 24,     # VCO 2 PITCH
-    22: 25,     # VCO 2 SHAPE  *docs say VCO 1
-    23: 22,     # : 23? VCO 1 OCTAVE *docs say VCO 1
-    24: 23,     # : 22? VCO 1 OCTAVE *docs say VCO 1
-    25: 28,     # CROSS MOD
-    26:  0,     # PITCH EG INT
-    27: 26,     # SYNC
-    28: 27,     # RING
-    29: 39,     # VCO 1 LEVEL
-    30: 40,     # VCO 2 LEVEL
-    31: 41,     # NOISE LEVEL * mapped to multi-engine level
-    32: 42,     # CUTOFF
-    33: 43,     # RESONANCE
-    34:  0,     # CUTOFF EG INT
-    35:  0,     # CUTOFF VELOCITY TRACK
-    36: 45,     # CUTOFF KEYBOARD TRACK
-    37:  0,     # CUTOFF TYPE
-    40: 46,     # AMP EG ATTACK
-    41: 47,     # AMP EG DECAY
-    42: 48,     # AMP EG SUSTAIN
-    43: 49,     # AMP EG RELEASE
-    44: 50,     # EG ATTACK
-    45: 51,     # EG DECAY
-    46:  0,     # EG SUSTAIN
-    47:  0,     # EG RELEASE
-    48: 56,     # LFO RATE
-    49: 57,     # LFO INT
-    50: 58,     # LFO TARGET
-    51: 57,     # LFO EG
-    52: 54,     # LFO TYPE
-    53:  0,     # DELAY OUTPUT ROUTING
-    55:  0,     # DELAY HI PASS CUTOFF
-    56: 70,     # DELAY TIME
-    57: 71,     # DELAY FEEDBACK
-    61: 126,     # PITCH BEND
-    62: 129,     # GATE TIME
-}
 
-def translate_motion_parameter(og_val):
-    """
-    og-params
-    ---------
-     0 : None
-    17 : VCO 1 PITCH
-    18 : VCO 1 SHAPE
-    19 : VCO 1 OCTAVE
-    20 : VCO 1 OCTAVE
-    21 : VCO 2 PITCH
-    22 : VCO 1 SHAPE
-    23 : VCO 1 OCTAVE
-    24 : VCO 1 OCTAVE
-    25 : CROSS MOD
-    26 : PITCH EG INT
-    27 : SYNC
-    28 : RING
-    29 : VCO 1 LEVEL
-    30 : VCO 2 LEVEL
-    31 : NOISE LEVEL
-    32 : CUTOFF
-    33 : RESONANCE
-    34 : CUTOFF EG INT
-    35 : CUTOFF VELOCITY TRACK
-    36 : CUTOFF KEYBOARD TRACK
-    37 : CUTOFF TYPE
-    40 : AMP EG ATTACK
-    41 : AMP EG DECAY
-    42 : AMP EG SUSTAIN
-    43 : AMP EG RELEASE
-    44 : EG ATTACK
-    45 : EG DECAY
-    46 : EG SUSTAIN
-    47 : EG RELEASE
-    48 : LFO RATE
-    49 : LFO INT
-    50 : LFO TARGET
-    51 : LFO EG
-    52 : LFO TYPE
-    53 : DELAY OUTPUT ROUTING
-    55 : DELAY HI PASS CUTOFF
-    56 : DELAY TIME
-    57 : DELAY FEEDBACK
-    61 : PITCH BEND
-    62 : GATE TIME
+"""
+og-step-data
++-------+-------+---------+----------------------------------------------+
+| Offset|  Bit  |  Range  |  Description                                 |
++-------+-------+---------+----------------------------------------------+
+|   0   |       |  0~127  | Note No (1)                           0~127  |
++-------+-------+---------+----------------------------------------------+
+|   1   |       |  0~127  | Note No (2)                           0~127  |
++-------+-------+---------+----------------------------------------------+
+|   2   |       |  0~127  | Note No (3)                           0~127  |
++-------+-------+---------+----------------------------------------------+
+|   3   |       |  0~127  | Note No (4)                           0~127  |
++-------+-------+---------+----------------------------------------------+
+|   4   |       |  0~127  | Velocity No (1) 0,1~127=NoEvent,Velocity1~127|
++-------+-------+---------+----------------------------------------------+
+|   5   |       |  0~127  | Velocity No (2) 0,1~127=NoEvent,Velocity1~127|
++-------+-------+---------+----------------------------------------------+
+|   6   |       |  0~127  | Velocity No (3) 0,1~127=NoEvent,Velocity1~127|
++-------+-------+---------+----------------------------------------------+
+|   7   |       |  0~127  | Velocity No (4) 0,1~127=NoEvent,Velocity1~127|
++-------+-------+---------+----------------------------------------------+
+|   8   |  0-6  |  0~127  | Gate time (1)        0~72,73~127=0%~100%,TIE |
+|   8   |   7   |   0,1   | Trigger switch (1)    0,1=Off,On  *ntoe S4-1 |
++-------+-------+---------+----------------------------------------------+
+|   9   |  0-6  |  0~127  | Gate time (2)        0~72,73~127=0%~100%,TIE |
+|   9   |   7   |   0,1   | Trigger switch (2)    0,1=Off,On  *ntoe S4-1 |
++-------+-------+---------+----------------------------------------------+
+|  10   |  0-6  |  0~127  | Gate time (3)        0~72,73~127=0%~100%,TIE |
+|  10   |   7   |   0,1   | Trigger switch (3)    0,1=Off,On  *ntoe S4-1 |
++-------+-------+---------+----------------------------------------------+
+|  11   |  0-6  |  0~127  | Gate time (4)        0~72,73~127=0%~100%,TIE |
+|  11   |   7   |   0,1   | Trigger switch (4)    0,1=Off,On  *ntoe S4-1 |
++-------+-------+---------+----------------------------------------------+
+|  12   |       |  0~255  | Motion Slot 1 Data 1        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  13   |       |  0~255  | Motion Slot 1 Data 2        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  14   |       |  0~255  | Motion Slot 2 Data 1        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  15   |       |  0~255  | Motion Slot 2 Data 2        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  16   |       |  0~255  | Motion Slot 3 Data 1        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  17   |       |  0~255  | Motion Slot 3 Data 2        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  18   |       |  0~255  | Motion Slot 4 Data 1        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  19   |       |  0~255  | Motion Slot 4 Data 2        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
 
-    xd-params
-    ---------
-      0 : None
-     15 : PORTAMENTO
-     16 : VOICE MODE DEPTH
-     17 : VOICE MODE TYPE
-     18 : VCO 1 WAVE
-     19 : VCO 1 OCTAVE
-     20 : VCO 1 PITCH
-     21 : VCO 1 SHAPE
-     22 : VCO 2 WAVE
-     23 : VCO 2 OCTAVE
-     24 : VCO 2 PITCH
-     25 : VCO 2 SHAPE
-     26 : SYNC
-     27 : RING
-     28 : CROSS MOD DEPTH
-     29 : MULTI ENGINE TYPE
-     30 : MULTI ENGINE NOISE TYPE
-     31 : MULTI ENGINE VPM TYPE
-     33 : MULTI SHAPE NOISE
-     34 : MULTI SHAPE VPM
-     35 : MULTI SHAPE USER
-     36 : MULTI SHIFT SHAPE NOISE
-     37 : MULTI SHIFT SHAPE VPM
-     38 : MULTI SHIFT SHAPE USER
-     39 : VCO 1 LEVEL
-     40 : VCO 2 LEVEL
-     41 : MULTI ENGINE LEVEL
-     42 : CUTOFF
-     43 : RESONANCE
-     45 : KEYTRACK
-     46 ; AMP EG ATTACK
-     47 : AMP EG DECAY
-     48 ; AMP EG SUSTAIN
-     49 : AMP EG RELEASE
-     50 ; EG ATTACK
-     51 : EG DECAY
-     52 : EG INT
-     53 : EG TARGET
-     54 : LFO WAVE
-     55 : LFO MODE
-     56 : LFO RATE
-     57 : LFO INT
-     58 : LFO TARGET
-     59 : MOD FX ON/OFF
-     66 : MOD FX TIME
-     67 : MOD FX DEPTH
-     68 : DELAY ON/OFF
-     70 : DELAY TIME
-     71 : DELAY DEPTH
-     72 : REVERB ON/OFF
-     74 : REVERB TIME
-     75 : REVERB DEPTH
-    126 : PITCH BEND
-    129 : GATE TIME
+xd-step-data
++-------+-------+---------+-----------------------------------------------+
+| Offset|  Bit  |  Range  |  Description                                  |
++-------+-------+---------+-----------------------------------------------+
+|   0   |       |  0~127  | Note No (1)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   1   |       |  0~127  | Note No (2)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   2   |       |  0~127  | Note No (3)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   3   |       |  0~127  | Note No (4)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   4   |       |  0~127  | Note No (5)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   5   |       |  0~127  | Note No (6)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   6   |       |  0~127  | Note No (7)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   7   |       |  0~127  | Note No (8)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   8   |       |  0~127  | Velocity No (1) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|   9   |       |  0~127  | Velocity No (2) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  10   |       |  0~127  | Velocity No (3) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  11   |       |  0~127  | Velocity No (4) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  12   |       |  0~127  | Velocity No (5) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  13   |       |  0~127  | Velocity No (6) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  14   |       |  0~127  | Velocity No (7) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  15   |       |  0~127  | Velocity No (8) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  16   |  0-6  |  0~127  | Gate time (1)         0~72,73~127=0%~100%,TIE |
+|  16   |   7   |   0,1   | Trigger switch (1)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  17   |  0-6  |  0~127  | Gate time (2)         0~72,73~127=0%~100%,TIE |
+|  17   |   7   |   0,1   | Trigger switch (2)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  18   |  0-6  |  0~127  | Gate time (3)         0~72,73~127=0%~100%,TIE |
+|  18   |   7   |   0,1   | Trigger switch (3)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  19   |  0-6  |  0~127  | Gate time (4)         0~72,73~127=0%~100%,TIE |
+|  19   |   7   |   0,1   | Trigger switch (4)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  20   |  0-6  |  0~127  | Gate time (5)         0~72,73~127=0%~100%,TIE |
+|  20   |   7   |   0,1   | Trigger switch (5)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  21   |  0-6  |  0~127  | Gate time (6)         0~72,73~127=0%~100%,TIE |
+|  21   |   7   |   0,1   | Trigger switch (6)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  22   |  0-6  |  0~127  | Gate time (7)         0~72,73~127=0%~100%,TIE |
+|  22   |   7   |   0,1   | Trigger switch (7)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  23   |  0-6  |  0~127  | Gate time (8)         0~72,73~127=0%~100%,TIE |
+|  23   |   7   |   0,1   | Trigger switch (8)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+| 24~30 |       |         | Motion Slot 1                      *note S3-2 |
++-------+-------+---------+-----------------------------------------------+
+| 31~37 |       |         | Motion Slot 2                      *note S3-2 |
++-------+-------+---------+-----------------------------------------------+
+| 38~44 |       |         | Motion Slot 3                      *note S3-2 |
++-------+-------+---------+-----------------------------------------------+
+| 45~51 |       |         | Motion Slot 4                      *note S3-2 |
++-------+-------+---------+-----------------------------------------------+
 
-    """
-    xd_val = og_to_xd[og_val]
-    return xd_val
++-------+-------+---------+-------------------------------------+
+| Offset|  Bit  |  Range  |  Description                        |
++-------+-------+---------+-------------------------------------+
+|   0   |       |  0~255  |  Motion Slot x DATA 1(bit2-9)       | 
+|   1   |       |  0~255  |  Motion Slot x DATA 2(bit2-9)       | 
+|   2   |       |  0~255  |  Motion Slot x DATA 3(bit2-9)       | 
+|   3   |       |  0~255  |  Motion Slot x DATA 4(bit2-9)       | 
+|   4   |       |  0~255  |  Motion Slot x DATA 5(bit2-9)       | 
++-------+-------+---------+-------------------------------------+
+|   5   |  0-1  |   0~3   |  Motion Slot x DATA 1(bit0-1)       | 
+|   5   |  2-3  |   0~3   |  Motion Slot x DATA 2(bit0-1)       | 
+|   5   |  4-5  |   0~3   |  Motion Slot x DATA 3(bit0-1)       | 
+|   5   |  6-7  |   0~3   |  Motion Slot x DATA 4(bit0-1)       | 
++-------+-------+---------+-------------------------------------+
+|   6   |  0-1  |   0~3   |  Motion Slot x DATA 5(bit0-1)       | 
+|   6   |  2~7  |         |  Reserved                           |
++-------+-------+---------+-------------------------------------+
 
-
-def translate_step_data(og_step_data):
-    """
-    og-step-data
-    +-------+-------+---------+----------------------------------------------+
-    | Offset|  Bit  |  Range  |  Description                                 |
-    +-------+-------+---------+----------------------------------------------+
-    |   0   |       |  0~127  | Note No (1)                           0~127  |
-    +-------+-------+---------+----------------------------------------------+
-    |   1   |       |  0~127  | Note No (2)                           0~127  |
-    +-------+-------+---------+----------------------------------------------+
-    |   2   |       |  0~127  | Note No (3)                           0~127  |
-    +-------+-------+---------+----------------------------------------------+
-    |   3   |       |  0~127  | Note No (4)                           0~127  |
-    +-------+-------+---------+----------------------------------------------+
-    |   4   |       |  0~127  | Velocity No (1) 0,1~127=NoEvent,Velocity1~127|
-    +-------+-------+---------+----------------------------------------------+
-    |   5   |       |  0~127  | Velocity No (2) 0,1~127=NoEvent,Velocity1~127|
-    +-------+-------+---------+----------------------------------------------+
-    |   6   |       |  0~127  | Velocity No (3) 0,1~127=NoEvent,Velocity1~127|
-    +-------+-------+---------+----------------------------------------------+
-    |   7   |       |  0~127  | Velocity No (4) 0,1~127=NoEvent,Velocity1~127|
-    +-------+-------+---------+----------------------------------------------+
-    |   8   |  0-6  |  0~127  | Gate time (1)        0~72,73~127=0%~100%,TIE |
-    |   8   |   7   |   0,1   | Trigger switch (1)    0,1=Off,On  *ntoe S4-1 |
-    +-------+-------+---------+----------------------------------------------+
-    |   9   |  0-6  |  0~127  | Gate time (2)        0~72,73~127=0%~100%,TIE |
-    |   9   |   7   |   0,1   | Trigger switch (2)    0,1=Off,On  *ntoe S4-1 |
-    +-------+-------+---------+----------------------------------------------+
-    |  10   |  0-6  |  0~127  | Gate time (3)        0~72,73~127=0%~100%,TIE |
-    |  10   |   7   |   0,1   | Trigger switch (3)    0,1=Off,On  *ntoe S4-1 |
-    +-------+-------+---------+----------------------------------------------+
-    |  11   |  0-6  |  0~127  | Gate time (4)        0~72,73~127=0%~100%,TIE |
-    |  11   |   7   |   0,1   | Trigger switch (4)    0,1=Off,On  *ntoe S4-1 |
-    +-------+-------+---------+----------------------------------------------+
-    |  12   |       |  0~255  | Motion Slot 1 Data 1        0~255 *note S4-2 |
-    +-------+-------+---------+----------------------------------------------+
-    |  13   |       |  0~255  | Motion Slot 1 Data 2        0~255 *note S4-2 |
-    +-------+-------+---------+----------------------------------------------+
-    |  14   |       |  0~255  | Motion Slot 2 Data 1        0~255 *note S4-2 |
-    +-------+-------+---------+----------------------------------------------+
-    |  15   |       |  0~255  | Motion Slot 2 Data 2        0~255 *note S4-2 |
-    +-------+-------+---------+----------------------------------------------+
-    |  16   |       |  0~255  | Motion Slot 3 Data 1        0~255 *note S4-2 |
-    +-------+-------+---------+----------------------------------------------+
-    |  17   |       |  0~255  | Motion Slot 3 Data 2        0~255 *note S4-2 |
-    +-------+-------+---------+----------------------------------------------+
-    |  18   |       |  0~255  | Motion Slot 4 Data 1        0~255 *note S4-2 |
-    +-------+-------+---------+----------------------------------------------+
-    |  19   |       |  0~255  | Motion Slot 4 Data 2        0~255 *note S4-2 |
-    +-------+-------+---------+----------------------------------------------+
-
-    xd-step-data
-    +-------+-------+---------+-----------------------------------------------+
-    | Offset|  Bit  |  Range  |  Description                                  |
-    +-------+-------+---------+-----------------------------------------------+
-    |   0   |       |  0~127  | Note No (1)                            0~127  |
-    +-------+-------+---------+-----------------------------------------------+
-    |   1   |       |  0~127  | Note No (2)                            0~127  |
-    +-------+-------+---------+-----------------------------------------------+
-    |   2   |       |  0~127  | Note No (3)                            0~127  |
-    +-------+-------+---------+-----------------------------------------------+
-    |   3   |       |  0~127  | Note No (4)                            0~127  |
-    +-------+-------+---------+-----------------------------------------------+
-    |   4   |       |  0~127  | Note No (5)                            0~127  |
-    +-------+-------+---------+-----------------------------------------------+
-    |   5   |       |  0~127  | Note No (6)                            0~127  |
-    +-------+-------+---------+-----------------------------------------------+
-    |   6   |       |  0~127  | Note No (7)                            0~127  |
-    +-------+-------+---------+-----------------------------------------------+
-    |   7   |       |  0~127  | Note No (8)                            0~127  |
-    +-------+-------+---------+-----------------------------------------------+
-    |   8   |       |  0~127  | Velocity No (1) 0,1~127=NoEvent,Velocity1~127 |
-    +-------+-------+---------+-----------------------------------------------+
-    |   9   |       |  0~127  | Velocity No (2) 0,1~127=NoEvent,Velocity1~127 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  10   |       |  0~127  | Velocity No (3) 0,1~127=NoEvent,Velocity1~127 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  11   |       |  0~127  | Velocity No (4) 0,1~127=NoEvent,Velocity1~127 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  12   |       |  0~127  | Velocity No (5) 0,1~127=NoEvent,Velocity1~127 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  13   |       |  0~127  | Velocity No (6) 0,1~127=NoEvent,Velocity1~127 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  14   |       |  0~127  | Velocity No (7) 0,1~127=NoEvent,Velocity1~127 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  15   |       |  0~127  | Velocity No (8) 0,1~127=NoEvent,Velocity1~127 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  16   |  0-6  |  0~127  | Gate time (1)         0~72,73~127=0%~100%,TIE |
-    |  16   |   7   |   0,1   | Trigger switch (1)     0,1=Off,On  *note S3-1 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  17   |  0-6  |  0~127  | Gate time (2)         0~72,73~127=0%~100%,TIE |
-    |  17   |   7   |   0,1   | Trigger switch (2)     0,1=Off,On  *note S3-1 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  18   |  0-6  |  0~127  | Gate time (3)         0~72,73~127=0%~100%,TIE |
-    |  18   |   7   |   0,1   | Trigger switch (3)     0,1=Off,On  *note S3-1 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  19   |  0-6  |  0~127  | Gate time (4)         0~72,73~127=0%~100%,TIE |
-    |  19   |   7   |   0,1   | Trigger switch (4)     0,1=Off,On  *note S3-1 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  20   |  0-6  |  0~127  | Gate time (5)         0~72,73~127=0%~100%,TIE |
-    |  20   |   7   |   0,1   | Trigger switch (5)     0,1=Off,On  *note S3-1 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  21   |  0-6  |  0~127  | Gate time (6)         0~72,73~127=0%~100%,TIE |
-    |  21   |   7   |   0,1   | Trigger switch (6)     0,1=Off,On  *note S3-1 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  22   |  0-6  |  0~127  | Gate time (7)         0~72,73~127=0%~100%,TIE |
-    |  22   |   7   |   0,1   | Trigger switch (7)     0,1=Off,On  *note S3-1 |
-    +-------+-------+---------+-----------------------------------------------+
-    |  23   |  0-6  |  0~127  | Gate time (8)         0~72,73~127=0%~100%,TIE |
-    |  23   |   7   |   0,1   | Trigger switch (8)     0,1=Off,On  *note S3-1 |
-    +-------+-------+---------+-----------------------------------------------+
-    | 24~30 |       |         | Motion Slot 1                      *note S3-2 |
-    +-------+-------+---------+-----------------------------------------------+
-    | 31~37 |       |         | Motion Slot 2                      *note S3-2 |
-    +-------+-------+---------+-----------------------------------------------+
-    | 38~44 |       |         | Motion Slot 3                      *note S3-2 |
-    +-------+-------+---------+-----------------------------------------------+
-    | 45~51 |       |         | Motion Slot 4                      *note S3-2 |
-    +-------+-------+---------+-----------------------------------------------+
-
-    +-------+-------+---------+-------------------------------------+
-    | Offset|  Bit  |  Range  |  Description                        |
-    +-------+-------+---------+-------------------------------------+
-    |   0   |       |  0~255  |  Motion Slot x DATA 1(bit2-9)       | 
-    |   1   |       |  0~255  |  Motion Slot x DATA 2(bit2-9)       | 
-    |   2   |       |  0~255  |  Motion Slot x DATA 3(bit2-9)       | 
-    |   3   |       |  0~255  |  Motion Slot x DATA 4(bit2-9)       | 
-    |   4   |       |  0~255  |  Motion Slot x DATA 5(bit2-9)       | 
-    +-------+-------+---------+-------------------------------------+
-    |   5   |  0-1  |   0~3   |  Motion Slot x DATA 1(bit0-1)       | 
-    |   5   |  2-3  |   0~3   |  Motion Slot x DATA 2(bit0-1)       | 
-    |   5   |  4-5  |   0~3   |  Motion Slot x DATA 3(bit0-1)       | 
-    |   5   |  6-7  |   0~3   |  Motion Slot x DATA 4(bit0-1)       | 
-    +-------+-------+---------+-------------------------------------+
-    |   6   |  0-1  |   0~3   |  Motion Slot x DATA 5(bit0-1)       | 
-    |   6   |  2~7  |         |  Reserved                           |
-    +-------+-------+---------+-------------------------------------+
-
-    """
-    og_buffer = og_step_data
-    xd_buffer = 52 * b"\x00"
-    # notes
-    for i in range(0, 4):
-        xd_buffer[i] = og_buffer[i]
-    # note velocities
-    for i, j in zip(range(8, 12), range(4, 8)):
-        xd_buffer[i] = og_buffer[j]
-    # gates and triggers
-    for i, j in zip(range(16, 20), range(8, 12)):
-        xd_buffer[i] = og_buffer[j]
-    for i in range(20, 24):
-        xd_buffer[i] = 0
-    # motion data
-    for j in range(12, 20):
-        xd_buffer = translate_motion_parameter(og_buffer[j])
+"""
 
 
 """
