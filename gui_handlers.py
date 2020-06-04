@@ -121,6 +121,12 @@ class MyFrame(MainFrame):
             self.loadfile(pathname)
 
     def loadfile(self, pathname):
+        """File loader called when file dialog is used or file is dragged and dropped.
+
+        Args:
+            pathname (str or Path object): Path to file
+
+        """
         try:
             with open(pathname, 'r') as fileobj:
                 self.LoadData(fileobj)
@@ -169,6 +175,7 @@ class MyFrame(MainFrame):
         prgname = self.listCtrl.GetItemText(item, col=1)
         print(f"{prgname}")
         patchdata = self.zipobj.read(self.proglist[item])
+        print(common.flavour_to_product[common.patch_type(patchdata)] + " patch")
         dump.print_patch(patchdata)
         print_sep()
 
