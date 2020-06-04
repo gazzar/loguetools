@@ -135,7 +135,22 @@ def fn_translate_step_data(og_step_data):
     return xd_buffer
 
 
-fn_step_1_event_data = lambda src: fn_translate_step_data(src.step_1_event_data)
+fn_step_01_event_data = lambda src: fn_translate_step_data(src.step_01_event_data)
+fn_step_02_event_data = lambda src: fn_translate_step_data(src.step_02_event_data)
+fn_step_03_event_data = lambda src: fn_translate_step_data(src.step_03_event_data)
+fn_step_04_event_data = lambda src: fn_translate_step_data(src.step_04_event_data)
+fn_step_05_event_data = lambda src: fn_translate_step_data(src.step_05_event_data)
+fn_step_06_event_data = lambda src: fn_translate_step_data(src.step_06_event_data)
+fn_step_07_event_data = lambda src: fn_translate_step_data(src.step_07_event_data)
+fn_step_08_event_data = lambda src: fn_translate_step_data(src.step_08_event_data)
+fn_step_09_event_data = lambda src: fn_translate_step_data(src.step_09_event_data)
+fn_step_10_event_data = lambda src: fn_translate_step_data(src.step_10_event_data)
+fn_step_11_event_data = lambda src: fn_translate_step_data(src.step_11_event_data)
+fn_step_12_event_data = lambda src: fn_translate_step_data(src.step_12_event_data)
+fn_step_13_event_data = lambda src: fn_translate_step_data(src.step_13_event_data)
+fn_step_14_event_data = lambda src: fn_translate_step_data(src.step_14_event_data)
+fn_step_15_event_data = lambda src: fn_translate_step_data(src.step_15_event_data)
+fn_step_16_event_data = lambda src: fn_translate_step_data(src.step_16_event_data)
 
 
 """
@@ -495,23 +510,23 @@ minilogue_xd_patch_struct = (
     ("motion_slot_2_step1_16", ">H", "motion_slot_2_step1_16"),
     ("motion_slot_3_step1_16", ">H", "motion_slot_3_step1_16"),
     ("motion_slot_4_step1_16", ">H", "motion_slot_4_step1_16"),
-    # 190
-    ("step_1_event_data", "52p", fn_step_1_event_data),  # Fix/translate these
-    ("step_2_event_data", "52p", 52 * b"\x00"),
-    ("step_3_event_data", "52p", 52 * b"\x00"),
-    ("step_4_event_data", "52p", 52 * b"\x00"),
-    ("step_5_event_data", "52p", 52 * b"\x00"),
-    ("step_6_event_data", "52p", 52 * b"\x00"),
-    ("step_7_event_data", "52p", 52 * b"\x00"),
-    ("step_8_event_data", "52p", 52 * b"\x00"),
-    ("step_9_event_data", "52p", 52 * b"\x00"),
-    ("step_10_event_data", "52p", 52 * b"\x00"),
-    ("step_11_event_data", "52p", 52 * b"\x00"),
-    ("step_12_event_data", "52p", 52 * b"\x00"),
-    ("step_13_event_data", "52p", 52 * b"\x00"),
-    ("step_14_event_data", "52p", 52 * b"\x00"),
-    ("step_15_event_data", "52p", 52 * b"\x00"),
-    ("step_16_event_data", "52p", 52 * b"\x00"),
+    # 1900
+    ("step_01_event_data", "52s", fn_step_01_event_data),
+    ("step_02_event_data", "52s", fn_step_02_event_data),
+    ("step_03_event_data", "52s", fn_step_03_event_data),
+    ("step_04_event_data", "52s", fn_step_04_event_data),
+    ("step_05_event_data", "52s", fn_step_05_event_data),
+    ("step_06_event_data", "52s", fn_step_06_event_data),
+    ("step_07_event_data", "52s", fn_step_07_event_data),
+    ("step_08_event_data", "52s", fn_step_08_event_data),
+    ("step_09_event_data", "52s", fn_step_09_event_data),
+    ("step_10_event_data", "52s", fn_step_10_event_data),
+    ("step_11_event_data", "52s", fn_step_11_event_data),
+    ("step_12_event_data", "52s", fn_step_12_event_data),
+    ("step_13_event_data", "52s", fn_step_13_event_data),
+    ("step_14_event_data", "52s", fn_step_14_event_data),
+    ("step_15_event_data", "52s", fn_step_15_event_data),
+    ("step_16_event_data", "52s", fn_step_16_event_data),
     # 1022
     ("arp_gate_time", "B", "default_gate_time"),
     ("arp_rate", "B", 10),
