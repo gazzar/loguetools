@@ -62,6 +62,13 @@ def is_init_patch(flavour, hash):
     return init_program_hashes[flavour] == hash
 
 
+flavour_to_product = {
+        "xd":"xd",
+        "og":"minilogue",
+        "prologue":"prologue"
+    }
+
+
 def prog_info_template_xml(flavour, programmer=None, comment=None, copyright=None):
     """xml template for Prog_nnn.prog_info xml patch elements
 
@@ -77,11 +84,6 @@ def prog_info_template_xml(flavour, programmer=None, comment=None, copyright=Non
 
     """
     # create the file structure
-    flavour_to_product = {
-        "xd":"xd",
-        "og":"minilogue",
-        "prologue":"prologue"
-    }
     root = ET.Element(flavour_to_product[flavour] + "_ProgramInformation")
     programmer_elem = ET.SubElement(root, "Programmer")
     programmer_elem.text = programmer
