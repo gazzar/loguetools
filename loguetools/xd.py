@@ -11,6 +11,39 @@ def twos_comp(val, bits):
     return val
 
 
+og_slider_to_xd = {
+    0:  3, # PITCH BEND
+    1:  0, # GATE TIME
+    2:  3, # VCO 1 PITCH
+    3:  4, # VCO 1 SHAPE
+    4:  5, # VCO 2 PITCH
+    5:  6, # VCO 2 SHAPE
+    6:  7, # CROSS MOD DEPTH
+    7:  5, # VCO 2 PITCH EG INT
+    8:  9, # VCO 1 LEVEL
+    9: 10, # VCO 2 LEVEL
+   10: 11, # NOISE LEVEL
+   11: 12, # CUTOFF
+   12: 13, # RESONANCE
+   13: 20, # FILTER EG INT
+   14: 14, # AMP EG ATTACK
+   15: 15, # AMP EG DECAY
+   16: 16, # AMP EG SUSTAIN
+   17: 17, # AMP EG RELEASE
+   18: 18, # EG ATTACK
+   19: 19, # EG DECAY
+   20: 18, # EG SUSTAIN
+   21: 19, # EH RELEASE
+   22: 21, # LFO RATE
+   23: 22, # LFO INT
+   24: 12, # DELAY HI PASS CUTOFF
+   25: 27, # DELAY TIME
+   26: 28, # DELAY FEEDBACK
+   27:  1, # Portament Time
+   28:  2, # VOICE MODE DEPTH
+}
+
+
 og_motion_to_xd = {
      0:  0,     # None
     17: 20,     # VCO 1 PITCH
@@ -73,6 +106,9 @@ fn_multi_octave = lambda src: 0 if src.vco_1_octave == 0 else src.vco_1_octave -
 fn_voice_mode_type = lambda src: {0: 4, 1: 4, 2: 3, 3: 2, 4: 2, 5: 4, 6: 1, 7: 4}[src.voice_mode]
 # The following seems wrong; need more data
 fn_delay_time = lambda src: int(src.delay_time * 350.0 / 654.0)
+fn_slider_right = lambda src: og_slider_to_xd[src.slider_assign]
+fn_slider_left = lambda src: og_slider_to_xd[src.slider_assign]
+fn_bend_range = lambda src: int(100 + src.bend_range_plusminus / 12 * 100)
 
 # Based on the SonicLabs review, the minilogue's portamento time setting encodes both
 # the portamento time and the EG Legato setting. The OG midi docs say
@@ -446,10 +482,10 @@ minilogue_xd_patch_struct = (
     ("reverb_depth", "H", 0),
     ("bend_range_plus", "B", "bend_range_plus"),
     ("bend_range_minus", "B", "bend_range_minus"),
-    ("joystick_assign_plus", "B", 22),
-    ("joystick_range_plus", "B", 100),
-    ("joystick_assign_minus", "B", 12),
-    ("joystick_range_minus", "B", 100),
+    ("joystick_assign_plus", "B", fn_slider_right),
+    ("joystick_range_plus", "B", fn_bend_range),
+    ("joystick_assign_minus", "B", fn_slider_left),
+    ("joystick_range_minus", "B", fn_bend_range),
     ("cv_in_mode", "B", 0),
     ("cv_in_1_assign", "B", 0),
     ("cv_in_1_range", "B", 100),
