@@ -31,6 +31,10 @@ class MainFrame ( wx.Frame ):
         gSizer1.Add( self.toolbar, 0, wx.EXPAND, 5 )
 
         self.m_toolBar_options = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL )
+        self.m_checkBox_id = wx.CheckBox( self.m_toolBar_options, wx.ID_ANY, u"id", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_checkBox_id.SetToolTip( u"Prepend id to filename" )
+
+        self.m_toolBar_options.AddControl( self.m_checkBox_id )
         self.m_checkBox_md5 = wx.CheckBox( self.m_toolBar_options, wx.ID_ANY, u"md5:4", wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_checkBox_md5.SetToolTip( u"Append md5 checksum to filename" )
 

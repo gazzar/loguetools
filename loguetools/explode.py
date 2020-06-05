@@ -12,7 +12,7 @@ import version
 XD_PATCH_LENGTH = 1024
 
 
-def explode(filename, match_name, match_ident, append_md5_4, append_version, unskip_init):
+def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init):
     """Explode a minilogue og or xd or prologue program bank or extract a program.
 
     \b
@@ -63,9 +63,11 @@ def explode(filename, match_name, match_ident, append_md5_4, append_version, uns
         if common.is_init_patch(flavour, hash):
             # Init Program identified based on hash; i.e. a "True" Init Program
             continue
-        if (prgname == "Init Program") and (not unskip_init):
+        if (prgname in {"Init Program", "InitProgram"}) and (not unskip_init):
             # Init Program found and option not to skip is unchecked
             continue
+        if prepend_id:
+            prgname = f"{i+1:03d}_{prgname}"
         if append_md5_4:
             hash = hashlib.md5(patchdata).hexdigest()
             prgname = f"{prgname}-{hash[:4]}"
@@ -99,10 +101,11 @@ def explode(filename, match_name, match_ident, append_md5_4, append_version, uns
 @click.argument("filename", type=click.Path(exists=True))
 @click.option("--match_name", "-n", help="Dump the patch with name NAME")
 @click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
+@click.option("--prepend_id", "-p", is_flag=True, help="Prepend patch ID to the filename")
 @click.option("--append_md5_4", "-m", is_flag=True, help="Append 4 digits of an md5 checksum to the filename")
 @click.option("--append_version", "-v", is_flag=True, help="Append loguetools version to the filename")
 @click.option("--unskip_init", "-u", is_flag=True, help="Don't skip patches named Init Program")
-def click_explode(filename, match_name, match_ident, append_md5_4, append_version, unskip_init):
+def click_explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init):
     explode(filename, match_name, match_ident, append_md5_4, append_version, unskip_init)
 
 

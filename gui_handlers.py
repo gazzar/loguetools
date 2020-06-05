@@ -184,10 +184,11 @@ class MyFrame(MainFrame):
         translate(self.file, None, None, None, unskip_init)
 
     def OnExplode(self, event):
+        prepend_id = self.m_checkBox_id.GetValue()
         append_md5_4 = self.m_checkBox_md5.GetValue()
         append_version = self.m_checkBox_version.GetValue()
         unskip_init = self.m_checkBox_inits.GetValue()
-        explode(self.file, None, None, append_md5_4, append_version, unskip_init)
+        explode(self.file, None, None, prepend_id, append_md5_4, append_version, unskip_init)
 
     def OnExit(self, event):
         """Close the frame, terminating the application."""
