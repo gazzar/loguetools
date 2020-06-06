@@ -96,8 +96,8 @@ fn_motion_slot_4_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_4_1
 
 fn_slider_right = lambda src: og_slider_to_xd.get(src.slider_assign, 12)
 fn_slider_left = lambda src: og_slider_to_xd.get(src.slider_assign, 12)
-fn_bend_range_plus = lambda src: int(100 + src.bend_range_plus / 12 * 100)
-fn_bend_range_minus = lambda src: int(100 + src.bend_range_minus / 12 * 100)
+fn_bend_range_plus = lambda src: int(100 + src.bend_range_plus * 100 / 12)
+fn_bend_range_minus = lambda src: int(100 + src.bend_range_minus * 100 / 12)
 
 # Simple translation functions
 fn_delay_on_off = lambda src: 0 if src.delay_output_routing == 0 else 1
@@ -149,7 +149,7 @@ def fn_voice_mode_depth(src):
     """
     if src.voice_mode == 1:
         # DUO; this handling could well be wrong
-        return src.voice_mode_depth + 256
+        return clip(src.voice_mode_depth + 256, 256, 1023)
     elif src.voice_mode == 3:
         # MONO
         return 0
@@ -421,49 +421,49 @@ minilogue_xd_patch_struct = (
     ("octave", "B", "keyboard_octave"),
     ("portamento", "B", fn_portamento_time),
     ("key_trig", "B", 0),
-    ("voice_mode_depth", ">H", fn_voice_mode_depth),
+    ("voice_mode_depth", "<H", fn_voice_mode_depth),
     ("voice_mode_type", "B", fn_voice_mode_type),
     ("vco_1_wave", "B", "vco_1_wave"),
     ("vco_1_octave", "B", "vco_1_octave"),
-    ("vco_1_pitch", ">H", "vco_1_pitch"),
-    ("vco_1_shape", ">H", "vco_1_shape"),
+    ("vco_1_pitch", "<H", "vco_1_pitch"),
+    ("vco_1_shape", "<H", "vco_1_shape"),
     ("vco_2_wave", "B", "vco_2_wave"),
     ("vco_2_octave", "B", "vco_2_octave"),
-    ("vco_2_pitch", ">H", "vco_2_pitch"),
-    ("vco_2_shape", ">H", "vco_2_shape"),
+    ("vco_2_pitch", "<H", "vco_2_pitch"),
+    ("vco_2_shape", "<H", "vco_2_shape"),
     ("sync", "B", "sync"),
     ("ring", "B", "ring"),
-    ("cross_mod_depth", ">H", "cross_mod_depth"),
+    ("cross_mod_depth", "<H", "cross_mod_depth"),
     ("multi_type", "B", 0),
     ("select_noise", "B", 1),
     ("select_vpm", "B", 6),
     ("select_user", "B", 0),
-    ("shape_noise", ">H", 1),
-    ("shape_vpm", ">H", 6),
-    ("shape_user", ">H", 0),
-    ("shift_shape_noise", ">H", 0),
+    ("shape_noise", "<H", 1),
+    ("shape_vpm", "<H", 6),
+    ("shape_user", "<H", 0),
+    ("shift_shape_noise", "<H", 0),
     # 50
-    ("shift_shape_vpm", ">H", 0),
-    ("shift_shape_user", ">H", 0),
-    ("vco_1_level", ">H", "vco_1_level"),
-    ("vco_2_level", ">H", "vco_2_level"),
-    ("multi_level", ">H", "noise_level"),
-    ("cutoff", ">H", "cutoff"),
-    ("resonance", ">H", "resonance"),
+    ("shift_shape_vpm", "<H", 0),
+    ("shift_shape_user", "<H", 0),
+    ("vco_1_level", "<H", "vco_1_level"),
+    ("vco_2_level", "<H", "vco_2_level"),
+    ("multi_level", "<H", "noise_level"),
+    ("cutoff", "<H", "cutoff"),
+    ("resonance", "<H", "resonance"),
     ("cutoff_drive", "B", 0),
     ("cutoff_keyboard_track", "B", fn_cutoff_kbd_track),
-    ("amp_eg_attack", ">H", "amp_eg_attack"),
-    ("amp_eg_decay", ">H", "amp_eg_decay"),
-    ("amp_eg_sustain", ">H", "amp_eg_sustain"),
-    ("amp_eg_release", ">H", "amp_eg_release"),
-    ("eg_attack", ">H", "eg_attack"),
-    ("eg_decay", ">H", "eg_decay"),
-    ("eg_int", ">H", once.fn_eg_int),
+    ("amp_eg_attack", "<H", "amp_eg_attack"),
+    ("amp_eg_decay", "<H", "amp_eg_decay"),
+    ("amp_eg_sustain", "<H", "amp_eg_sustain"),
+    ("amp_eg_release", "<H", "amp_eg_release"),
+    ("eg_attack", "<H", "eg_attack"),
+    ("eg_decay", "<H", "eg_decay"),
+    ("eg_int", "<H", once.fn_eg_int),
     ("eg_target", "B", once.fn_eg_target),
     ("lfo_wave", "B", once.fn_lfo_wave),
     ("lfo_mode", "B", once.fn_lfo_mode),
-    ("lfo_rate", ">H", once.fn_lfo_rate),
-    ("lfo_int", ">H", once.fn_lfo_int),
+    ("lfo_rate", "<H", once.fn_lfo_rate),
+    ("lfo_int", "<H", once.fn_lfo_int),
     ("lfo_target", "B", once.fn_lfo_target),
     ("mod_fx_on_off", "B", 0),
     ("mod_fx_type", "B", 0),
@@ -472,17 +472,17 @@ minilogue_xd_patch_struct = (
     ("mod_fx_phaser", "B", 0),
     ("mod_fx_flanger", "B", 0),
     ("mod_fx_user", "B", 0),
-    ("mod_fx_time", ">H", 0),
-    ("mod_fx_depth", ">H", 0),
+    ("mod_fx_time", "<H", 0),
+    ("mod_fx_depth", "<H", 0),
     ("delay_on_off", "B", fn_delay_on_off),
     # 100
     ("delay_sub_type", "B", 3),
-    ("delay_time", ">H", fn_delay_time),
-    ("delay_depth", ">H", "delay_feedback"),
+    ("delay_time", "<H", fn_delay_time),
+    ("delay_depth", "<H", "delay_feedback"),
     ("reverb_on_off", "B", 0),
     ("reverb_sub_type", "B", 0),
-    ("reverb_time", ">H", 0),
-    ("reverb_depth", ">H", 0),
+    ("reverb_time", "<H", 0),
+    ("reverb_depth", "<H", 0),
     ("bend_range_plus", "B", "bend_range_plus"),
     ("bend_range_minus", "B", "bend_range_minus"),
     ("joystick_assign_plus", "B", fn_slider_right),
@@ -524,8 +524,8 @@ minilogue_xd_patch_struct = (
     ("user_param1_2_3_4_type", "B", 0),
     # 150
     ("program_transpose", "B", 13),
-    ("delay_dry_wet", ">H", 512),  # 50% wet/dry
-    ("reverb_dry_wet", ">H", 512),  # 50% wet/dry
+    ("delay_dry_wet", "<H", 512),  # 50% wet/dry
+    ("reverb_dry_wet", "<H", 512),  # 50% wet/dry
     ("midi_after_touch_assign", "B", 12),
     ("str_PRED", "4s", fn_str_pred),
     ("str_SQ", "2s", fn_str_sq),
