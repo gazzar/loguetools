@@ -98,7 +98,7 @@ def translate(filename, match_name, match_ident, verbose, unskip_init):
             if common.is_init_patch(flavour, hash):
                 # Init Program identified based on hash; i.e. a "True" Init Program
                 continue
-            if (prgname == "Init Program") and (not unskip_init):
+            if common.is_init_program_name(prgname) and not unskip_init:
                 # Init Program found and option not to skip is unchecked
                 continue
             non_init_patch_ids.append(i)

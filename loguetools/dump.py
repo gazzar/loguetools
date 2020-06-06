@@ -51,7 +51,7 @@ def dump(filename, match_name, match_ident, verbose, md5):
     for p in proglist:
         patchdata = zipobj.read(p)
         prgname = common.program_name(patchdata)
-        if prgname == "Init Program":
+        if common.is_init_program_name(prgname):
             continue
         checksum = ""
         if md5:

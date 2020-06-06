@@ -44,7 +44,8 @@ class sanitise_patchname():
 
 
 init_program_hashes = {
-    'og': '9d2fd7e2e97edc87306d8360eb881534',
+    'og1': '9d2fd7e2e97edc87306d8360eb881534',
+    'og2': '3c2611b06c1fbb118269a0d9ca764b34',
     'xd': 'fd6940f683f8b69966fc3fd08bbb5ee3',
     'prologue': 'a4fa5be24cb09c35a91e81ef2bbf71af',
 }
@@ -59,7 +60,14 @@ def is_init_patch(flavour, hash):
         bool: True iff Init Program matched
 
     """
-    return init_program_hashes[flavour] == hash
+    if flavour == "og":
+        return hash in {init_program_hashes["og1"], init_program_hashes["og2"]}
+    else:
+        return init_program_hashes[flavour] == hash
+
+
+def is_init_program_name(name):
+    return name.replace(' ', '').strip() == "InitProgram"
 
 
 flavour_to_product = {
