@@ -106,7 +106,7 @@ def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_
 @click.option("--append_version", "-v", is_flag=True, help="Append loguetools version to the filename")
 @click.option("--unskip_init", "-u", is_flag=True, help="Don't skip patches named Init Program")
 def click_explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init):
-    explode(filename, match_name, match_ident, append_md5_4, append_version, unskip_init)
+    explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init)
 
 
 if __name__ == "__main__":
