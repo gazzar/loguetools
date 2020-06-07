@@ -40,5 +40,10 @@ These are on my radar
 * BPM tempo is obviously wrong. I'm not sure why.
 * I haven't created minilogue patch packs that can be distributed. Thus most unit tests will fail. This may improve in future.
 
+# Licenses
+See LICENSE.txt  
+Code released under the 3-clause BSD license.  
+Application icon "tools by i cons from the Noun Project"
+
 # Development notes
 Suggestions and bug reports are welcome. Pull requests will probably be welcome.

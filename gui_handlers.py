@@ -46,7 +46,7 @@ class MyFrame(MainFrame):
     def __init__(self, parent):
         super().__init__(parent)
         # Application icon
-        self.SetIcon(wx.Icon(resource_path(u"icons/cog.ico")))
+        self.SetIcon(wx.Icon(resource_path(u"icons/tools.ico")))
 
         # Direct stdout to TextCtrlOut
         sys.stdout = self.m_textCtrlOut
