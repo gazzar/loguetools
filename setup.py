@@ -18,9 +18,9 @@ setuptools.setup(
     py_modules=[],
     entry_points='''
         [console_scripts]
-        translate=loguetools.translate:translate
-        explode=loguetools.explode:explode
-        dump=loguetools.dump:dump
+        translate=loguetools.translate:click_translate
+        explode=loguetools.explode:click_explode
+        dump=loguetools.dump:click_dump
     ''',
     url="https://github.com/gazzar/loguetools",
     packages=setuptools.find_packages(),
