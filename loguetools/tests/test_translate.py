@@ -1,6 +1,6 @@
 import click
 from click.testing import CliRunner
-from ..translate import click_translate
+from loguetools.translate import click_translate
 
 
 runner = CliRunner()
