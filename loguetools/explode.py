@@ -12,7 +12,7 @@ import version
 XD_PATCH_LENGTH = 1024
 
 
-def explode(filename, match_name, match_ident, append_md5_4, append_version, unskip_init):
+def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init):
     """Explode a minilogue og or xd or prologue program bank or extract a program.
 
     \b
@@ -23,7 +23,8 @@ def explode(filename, match_name, match_ident, append_md5_4, append_version, uns
 
     """
     zipobj = ZipFile(filename, "r", compression=ZIP_DEFLATED, compresslevel=9)
-    proglist = common.zip_progbins(zipobj)
+    proglist = common.zipread_progbins(zipobj)
+    proginfo_dict = common.zipread_all_prog_info(zipobj)
 
     if match_name is not None:
         match_ident = common.id_from_name(zipobj, match_name)
@@ -32,28 +33,41 @@ def explode(filename, match_name, match_ident, append_md5_4, append_version, uns
         proglist = [proglist[match_ident - 1]]
 
     # Create directory based on the filename stem
-    input_path = pathlib.Path(filename)
-    dir_path = input_path.with_suffix("")
+    input_file = pathlib.Path(filename)
+    dir_path = input_file.with_suffix("")
     dir_path.mkdir(exist_ok=True)
-    if input_path.suffix == ".mnlgxdlib":
+    if input_file.suffix in {".mnlgxdpreset", ".mnlgxdlib"}:
         suffix = ".mnlgxdprog"
-        prog_info_template = common.prog_info_template("xd")
-        fileinfo_xml = common.fileinfo_xml("xd", [0])
-    elif input_path.suffix == ".mnlgpreset":
+        flavour = "xd"
+    elif input_file.suffix in {".mnlgpreset", ".mnlglib"}:
         suffix = ".mnlgprog"
-        prog_info_template = common.prog_info_template("og")
-        fileinfo_xml = common.fileinfo_xml("og", [0])
-    elif input_path.suffix == ".prlglib":
+        flavour = "og"
+    elif input_file.suffix in {".prlgpreset", ".prlglib"}:
         suffix = ".prlgprog"
-        prog_info_template = common.prog_info_template("prologue")
-        fileinfo_xml = common.fileinfo_xml("prologue", [0])
+        flavour = "prologue"
+    fileinfo_xml = common.fileinfo_xml(flavour, [0])
+
+    # Read any copyright and author information if available
+    copyright = None
+    author = None
+    comment = None
+    if input_file.suffix in {".mnlgxdpreset", ".mnlgpreset", ".prlgpreset"}:
+        author, copyright = common.author_copyright_from_presetinformation_xml(zipobj)
 
     sanitise = common.sanitise_patchname()
     for i, p in enumerate(proglist):
         patchdata = zipobj.read(p)
         prgname = common.program_name(patchdata)
-        if (prgname == "Init Program") and (not unskip_init):
+        hash = hashlib.md5(patchdata).hexdigest()
+        flavour = common.patch_type(patchdata)
+        if common.is_init_patch(flavour, hash):
+            # Init Program identified based on hash; i.e. a "True" Init Program
             continue
+        if common.is_init_program_name(prgname) and not unskip_init:
+            # Init Program found and option not to skip is unchecked
+            continue
+        if prepend_id:
+            prgname = f"{i+1:03d}_{prgname}"
         if append_md5_4:
             hash = hashlib.md5(patchdata).hexdigest()
             prgname = f"{prgname}-{hash[:4]}"
@@ -68,6 +82,13 @@ def explode(filename, match_name, match_ident, append_md5_4, append_version, uns
             zip.writestr(f"Prog_000.prog_bin", binary)
 
             # .prog_info record/file
+            # Use any available presetinformation_xml author and copyright fields
+            if author is not None:
+                comment = f"Author: {author}"
+            proginfo_comment = (proginfo_dict[p])['Comment']
+            if proginfo_comment is not None:
+                comment = f"{comment}, " + proginfo_comment
+            prog_info_template = common.prog_info_template_xml(flavour, comment=comment, copyright=copyright)
             zip.writestr(f"Prog_000.prog_info", prog_info_template)
 
             # FileInformation.xml record/file
@@ -80,11 +101,12 @@ def explode(filename, match_name, match_ident, append_md5_4, append_version, uns
 @click.argument("filename", type=click.Path(exists=True))
 @click.option("--match_name", "-n", help="Dump the patch with name NAME")
 @click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
+@click.option("--prepend_id", "-p", is_flag=True, help="Prepend patch ID to the filename")
 @click.option("--append_md5_4", "-m", is_flag=True, help="Append 4 digits of an md5 checksum to the filename")
 @click.option("--append_version", "-v", is_flag=True, help="Append loguetools version to the filename")
 @click.option("--unskip_init", "-u", is_flag=True, help="Don't skip patches named Init Program")
-def click_explode(filename, match_name, match_ident, append_md5_4, append_version, unskip_init):
-    explode(filename, match_name, match_ident, append_md5_4, append_version, unskip_init)
+def click_explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init):
+    explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init)
 
 
 if __name__ == "__main__":

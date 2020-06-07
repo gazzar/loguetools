@@ -11,6 +11,94 @@ def twos_comp(val, bits):
     return val
 
 
+og_slider_to_xd = {
+    0: 12, # PITCH BEND. This is taken care of by +/-x on the xd so I default to filter EG.
+    1:  0, # GATE TIME
+    2:  3, # VCO 1 PITCH
+    3:  4, # VCO 1 SHAPE
+    4:  5, # VCO 2 PITCH
+    5:  6, # VCO 2 SHAPE
+    6:  7, # CROSS MOD DEPTH
+    7:  5, # VCO 2 PITCH EG INT
+    8:  9, # VCO 1 LEVEL
+    9: 10, # VCO 2 LEVEL
+   10: 11, # NOISE LEVEL
+   11: 12, # CUTOFF
+   12: 13, # RESONANCE
+   13: 20, # FILTER EG INT
+   14: 14, # AMP EG ATTACK
+   15: 15, # AMP EG DECAY
+   16: 16, # AMP EG SUSTAIN
+   17: 17, # AMP EG RELEASE
+   18: 18, # EG ATTACK
+   19: 19, # EG DECAY
+   20: 18, # EG SUSTAIN
+   21: 19, # EH RELEASE
+   22: 21, # LFO RATE
+   23: 22, # LFO INT
+   24: 12, # DELAY HI PASS CUTOFF
+   25: 27, # DELAY TIME
+   26: 28, # DELAY FEEDBACK
+   27:  1, # Portament Time
+   28:  2, # VOICE MODE DEPTH
+}
+
+
+og_motion_to_xd = {
+     0:  0,     # None
+    17: 20,     # VCO 1 PITCH
+    18: 21,     # VCO 1 SHAPE
+    19: 18,     # : 19? VCO 1 OCTAVE **og WAVE maybe
+    20: 19,     # : 18? VCO 1 OCTAVE **one of these might be WAVE
+    21: 24,     # VCO 2 PITCH
+    22: 25,     # VCO 2 SHAPE  *docs say VCO 1
+    23: 22,     # : 23? VCO 1 OCTAVE *docs say VCO 1
+    24: 23,     # : 22? VCO 1 OCTAVE *docs say VCO 1
+    25: 28,     # CROSS MOD
+    26:  0,     # PITCH EG INT
+    27: 26,     # SYNC
+    28: 27,     # RING
+    29: 39,     # VCO 1 LEVEL
+    30: 40,     # VCO 2 LEVEL
+    31: 41,     # NOISE LEVEL * mapped to multi-engine level
+    32: 42,     # CUTOFF
+    33: 43,     # RESONANCE
+    34:  0,     # CUTOFF EG INT
+    35:  0,     # CUTOFF VELOCITY TRACK
+    36: 45,     # CUTOFF KEYBOARD TRACK
+    37:  0,     # CUTOFF TYPE
+    40: 46,     # AMP EG ATTACK
+    41: 47,     # AMP EG DECAY
+    42: 48,     # AMP EG SUSTAIN
+    43: 49,     # AMP EG RELEASE
+    44: 50,     # EG ATTACK
+    45: 51,     # EG DECAY
+    46:  0,     # EG SUSTAIN
+    47:  0,     # EG RELEASE
+    48: 56,     # LFO RATE
+    49: 57,     # LFO INT
+    50: 58,     # LFO TARGET
+    51: 57,     # LFO EG
+    52: 54,     # LFO TYPE
+    53:  0,     # DELAY OUTPUT ROUTING
+    55:  0,     # DELAY HI PASS CUTOFF
+    56: 70,     # DELAY TIME
+    57: 71,     # DELAY FEEDBACK
+    61: 126,     # PITCH BEND
+    62: 129,     # GATE TIME
+}
+
+
+fn_motion_slot_1_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_1_1_parameter, 0)
+fn_motion_slot_2_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_2_1_parameter, 0)
+fn_motion_slot_3_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_3_1_parameter, 0)
+fn_motion_slot_4_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_4_1_parameter, 0)
+
+fn_slider_right = lambda src: og_slider_to_xd.get(src.slider_assign, 12)
+fn_slider_left = lambda src: og_slider_to_xd.get(src.slider_assign, 12)
+fn_bend_range_plus = lambda src: int(100 + src.bend_range_plus * 100 / 12)
+fn_bend_range_minus = lambda src: int(100 + src.bend_range_minus * 100 / 12)
+
 # Simple translation functions
 fn_delay_on_off = lambda src: 0 if src.delay_output_routing == 0 else 1
 fn_str_pred = lambda src: "PRED"
@@ -31,6 +119,7 @@ fn_delay_time = lambda src: int(src.delay_time * 350.0 / 654.0)
 # |  61   |  0~7  |  0~127  |  Portament Time          0,1~127=OFF,0~126  |
 fn_portamento_time = lambda src: 0 if src.portamento_time == 0 else src.portamento_time - 1
 fn_eg_legato = lambda src: src.portamento_time > 0
+
 
 def fn_voice_mode_depth(src):
     """
@@ -60,12 +149,47 @@ def fn_voice_mode_depth(src):
     """
     if src.voice_mode == 1:
         # DUO; this handling could well be wrong
-        return src.voice_mode_depth + 256
+        return clip(src.voice_mode_depth + 256, 256, 1023)
     elif src.voice_mode == 3:
         # MONO
         return 0
     else:
         return src.voice_mode_depth
+
+
+def fn_translate_step_data(og_step_data):
+    xd_buffer = bytearray(52 * b"\x00")
+    # notes
+    xd_buffer[0:4] = og_step_data[0:4]
+    # note velocities
+    xd_buffer[8:12] = og_step_data[4:8]
+    # gates and triggers
+    xd_buffer[16:20] = og_step_data[8:12]
+    # motion data; xd is 10 bit and og is 8-bit; not I'm not sure if I should shift them
+    # I think I will just copy across to slots 0-3
+    xd_buffer[24:26] = og_step_data[12:14]
+    xd_buffer[31:33] = og_step_data[14:16]
+    xd_buffer[38:40] = og_step_data[16:18]
+    xd_buffer[45:47] = og_step_data[18:20]
+    return xd_buffer
+
+
+fn_step_01_event_data = lambda src: fn_translate_step_data(src.step_01_event_data)
+fn_step_02_event_data = lambda src: fn_translate_step_data(src.step_02_event_data)
+fn_step_03_event_data = lambda src: fn_translate_step_data(src.step_03_event_data)
+fn_step_04_event_data = lambda src: fn_translate_step_data(src.step_04_event_data)
+fn_step_05_event_data = lambda src: fn_translate_step_data(src.step_05_event_data)
+fn_step_06_event_data = lambda src: fn_translate_step_data(src.step_06_event_data)
+fn_step_07_event_data = lambda src: fn_translate_step_data(src.step_07_event_data)
+fn_step_08_event_data = lambda src: fn_translate_step_data(src.step_08_event_data)
+fn_step_09_event_data = lambda src: fn_translate_step_data(src.step_09_event_data)
+fn_step_10_event_data = lambda src: fn_translate_step_data(src.step_10_event_data)
+fn_step_11_event_data = lambda src: fn_translate_step_data(src.step_11_event_data)
+fn_step_12_event_data = lambda src: fn_translate_step_data(src.step_12_event_data)
+fn_step_13_event_data = lambda src: fn_translate_step_data(src.step_13_event_data)
+fn_step_14_event_data = lambda src: fn_translate_step_data(src.step_14_event_data)
+fn_step_15_event_data = lambda src: fn_translate_step_data(src.step_15_event_data)
+fn_step_16_event_data = lambda src: fn_translate_step_data(src.step_16_event_data)
 
 
 """
@@ -287,7 +411,7 @@ the forms
 
 ('label', 'binary-format string', 'src1_name')
 ('label', 'binary-format string', p), where p is an integer
-('label', 'binary-format string', f, arg1, ..., argN), where f is a function with optional args
+('label', 'binary-format string', f), where f is a function
 
 """
 minilogue_xd_patch_struct = (
@@ -297,49 +421,49 @@ minilogue_xd_patch_struct = (
     ("octave", "B", "keyboard_octave"),
     ("portamento", "B", fn_portamento_time),
     ("key_trig", "B", 0),
-    ("voice_mode_depth", "H", fn_voice_mode_depth),
+    ("voice_mode_depth", "<H", fn_voice_mode_depth),
     ("voice_mode_type", "B", fn_voice_mode_type),
     ("vco_1_wave", "B", "vco_1_wave"),
     ("vco_1_octave", "B", "vco_1_octave"),
-    ("vco_1_pitch", "H", "vco_1_pitch"),
-    ("vco_1_shape", "H", "vco_1_shape"),
+    ("vco_1_pitch", "<H", "vco_1_pitch"),
+    ("vco_1_shape", "<H", "vco_1_shape"),
     ("vco_2_wave", "B", "vco_2_wave"),
     ("vco_2_octave", "B", "vco_2_octave"),
-    ("vco_2_pitch", "H", "vco_2_pitch"),
-    ("vco_2_shape", "H", "vco_2_shape"),
+    ("vco_2_pitch", "<H", "vco_2_pitch"),
+    ("vco_2_shape", "<H", "vco_2_shape"),
     ("sync", "B", "sync"),
     ("ring", "B", "ring"),
-    ("cross_mod_depth", "H", "cross_mod_depth"),
+    ("cross_mod_depth", "<H", "cross_mod_depth"),
     ("multi_type", "B", 0),
     ("select_noise", "B", 1),
     ("select_vpm", "B", 6),
     ("select_user", "B", 0),
-    ("shape_noise", "H", 1),
-    ("shape_vpm", "H", 6),
-    ("shape_user", "H", 0),
-    ("shift_shape_noise", "H", 0),
+    ("shape_noise", "<H", 1),
+    ("shape_vpm", "<H", 6),
+    ("shape_user", "<H", 0),
+    ("shift_shape_noise", "<H", 0),
     # 50
-    ("shift_shape_vpm", "H", 0),
-    ("shift_shape_user", "H", 0),
-    ("vco1_level", "H", "vco_1_level"),
-    ("vco2_level", "H", "vco_2_level"),
-    ("multi_level", "H", "noise_level"),
-    ("cutoff", "H", "cutoff"),
-    ("resonance", "H", "resonance"),
+    ("shift_shape_vpm", "<H", 0),
+    ("shift_shape_user", "<H", 0),
+    ("vco_1_level", "<H", "vco_1_level"),
+    ("vco_2_level", "<H", "vco_2_level"),
+    ("multi_level", "<H", "noise_level"),
+    ("cutoff", "<H", "cutoff"),
+    ("resonance", "<H", "resonance"),
     ("cutoff_drive", "B", 0),
     ("cutoff_keyboard_track", "B", fn_cutoff_kbd_track),
-    ("amp_eg_attack", "H", "amp_eg_attack"),
-    ("amp_eg_decay", "H", "amp_eg_decay"),
-    ("amp_eg_sustain", "H", "amp_eg_sustain"),
-    ("amp_eg_release", "H", "amp_eg_release"),
-    ("eg_attack", "H", "eg_attack"),
-    ("eg_decay", "H", "eg_decay"),
-    ("eg_int", "H", once.fn_eg_int),
+    ("amp_eg_attack", "<H", "amp_eg_attack"),
+    ("amp_eg_decay", "<H", "amp_eg_decay"),
+    ("amp_eg_sustain", "<H", "amp_eg_sustain"),
+    ("amp_eg_release", "<H", "amp_eg_release"),
+    ("eg_attack", "<H", "eg_attack"),
+    ("eg_decay", "<H", "eg_decay"),
+    ("eg_int", "<H", once.fn_eg_int),
     ("eg_target", "B", once.fn_eg_target),
     ("lfo_wave", "B", once.fn_lfo_wave),
     ("lfo_mode", "B", once.fn_lfo_mode),
-    ("lfo_rate", "H", once.fn_lfo_rate),
-    ("lfo_int", "H", once.fn_lfo_int),
+    ("lfo_rate", "<H", once.fn_lfo_rate),
+    ("lfo_int", "<H", once.fn_lfo_int),
     ("lfo_target", "B", once.fn_lfo_target),
     ("mod_fx_on_off", "B", 0),
     ("mod_fx_type", "B", 0),
@@ -348,23 +472,23 @@ minilogue_xd_patch_struct = (
     ("mod_fx_phaser", "B", 0),
     ("mod_fx_flanger", "B", 0),
     ("mod_fx_user", "B", 0),
-    ("mod_fx_time", "H", 0),
-    ("mod_fx_depth", "H", 0),
+    ("mod_fx_time", "<H", 0),
+    ("mod_fx_depth", "<H", 0),
     ("delay_on_off", "B", fn_delay_on_off),
     # 100
     ("delay_sub_type", "B", 3),
-    ("delay_time", "H", fn_delay_time),
-    ("delay_depth", "H", "delay_feedback"),
+    ("delay_time", "<H", fn_delay_time),
+    ("delay_depth", "<H", "delay_feedback"),
     ("reverb_on_off", "B", 0),
     ("reverb_sub_type", "B", 0),
-    ("reverb_time", "H", 0),
-    ("reverb_depth", "H", 0),
+    ("reverb_time", "<H", 0),
+    ("reverb_depth", "<H", 0),
     ("bend_range_plus", "B", "bend_range_plus"),
     ("bend_range_minus", "B", "bend_range_minus"),
-    ("joystick_assign_plus", "B", 22),
-    ("joystick_range_plus", "B", 100),
-    ("joystick_assign_minus", "B", 12),
-    ("joystick_range_minus", "B", 100),
+    ("joystick_assign_plus", "B", fn_slider_right),
+    ("joystick_range_plus", "B", fn_bend_range_plus),
+    ("joystick_assign_minus", "B", fn_slider_left),
+    ("joystick_range_minus", "B", fn_bend_range_minus),
     ("cv_in_mode", "B", 0),
     ("cv_in_1_assign", "B", 0),
     ("cv_in_1_range", "B", 100),
@@ -400,48 +524,54 @@ minilogue_xd_patch_struct = (
     ("user_param1_2_3_4_type", "B", 0),
     # 150
     ("program_transpose", "B", 13),
-    ("delay_dry_wet", "H", 512),  # 50% wet/dry
-    ("reverb_dry_wet", "H", 512),  # 50% wet/dry
+    ("delay_dry_wet", "<H", 512),  # 50% wet/dry
+    ("reverb_dry_wet", "<H", 512),  # 50% wet/dry
     ("midi_after_touch_assign", "B", 12),
     ("str_PRED", "4s", fn_str_pred),
     ("str_SQ", "2s", fn_str_sq),
     ("step_1_16_active_step", "<H", 65535),
-    ("bpm", "H", "bpm"),
+    ("bpm", "<H", "bpm"),
     ("step_length", "B", "step_length"),
     ("step_resolution", "B", "step_resolution"),
     ("swing", "B", fn_swing),
     ("default_gate_time", "B", "default_gate_time"),
     ("step1_16", "<H", "step1_16"),
-    ("step1_16_motion", "<H", 0),  # Fix this
-    ("motion_slot_1_parameter", "<H", "motion_slot_1_parameter"),
-    ("motion_slot_2_parameter", "<H", "motion_slot_2_parameter"),
-    ("motion_slot_3_parameter", "<H", "motion_slot_3_parameter"),
-    ("motion_slot_4_parameter", "<H", "motion_slot_4_parameter"),
+    ("step1_16_motion", "<H", "step1_16_switch"),  # I think this is the corresponding param
+    ("motion_slot_1_0_parameter", "B", "motion_slot_1_0_parameter"),
+    ("motion_slot_1_1_parameter", "B", fn_motion_slot_1_parameter),
+    ("motion_slot_2_0_parameter", "B", "motion_slot_2_0_parameter"),
+    ("motion_slot_2_1_parameter", "B", fn_motion_slot_2_parameter),
+    ("motion_slot_3_0_parameter", "B", "motion_slot_3_0_parameter"),
+    ("motion_slot_3_1_parameter", "B", fn_motion_slot_3_parameter),
+    ("motion_slot_4_0_parameter", "B", "motion_slot_4_0_parameter"),
+    ("motion_slot_4_1_parameter", "B", fn_motion_slot_4_parameter),
     ("motion_slot_1_step1_16", "<H", "motion_slot_1_step1_16"),
     ("motion_slot_2_step1_16", "<H", "motion_slot_2_step1_16"),
     ("motion_slot_3_step1_16", "<H", "motion_slot_3_step1_16"),
     ("motion_slot_4_step1_16", "<H", "motion_slot_4_step1_16"),
-    # 190
-    ("step_1_event_data", "52p", 52 * b"\x00"),  # Fix/translate these
-    ("step_2_event_data", "52p", 52 * b"\x00"),
-    ("step_3_event_data", "52p", 52 * b"\x00"),
-    ("step_4_event_data", "52p", 52 * b"\x00"),
-    ("step_5_event_data", "52p", 52 * b"\x00"),
-    ("step_6_event_data", "52p", 52 * b"\x00"),
-    ("step_7_event_data", "52p", 52 * b"\x00"),
-    ("step_8_event_data", "52p", 52 * b"\x00"),
-    ("step_9_event_data", "52p", 52 * b"\x00"),
-    ("step_10_event_data", "52p", 52 * b"\x00"),
-    ("step_11_event_data", "52p", 52 * b"\x00"),
-    ("step_12_event_data", "52p", 52 * b"\x00"),
-    ("step_13_event_data", "52p", 52 * b"\x00"),
-    ("step_14_event_data", "52p", 52 * b"\x00"),
-    ("step_15_event_data", "52p", 52 * b"\x00"),
-    ("step_16_event_data", "52p", 52 * b"\x00"),
+    # 1900
+    ("step_01_event_data", "52s", fn_step_01_event_data),
+    ("step_02_event_data", "52s", fn_step_02_event_data),
+    ("step_03_event_data", "52s", fn_step_03_event_data),
+    ("step_04_event_data", "52s", fn_step_04_event_data),
+    ("step_05_event_data", "52s", fn_step_05_event_data),
+    ("step_06_event_data", "52s", fn_step_06_event_data),
+    ("step_07_event_data", "52s", fn_step_07_event_data),
+    ("step_08_event_data", "52s", fn_step_08_event_data),
+    ("step_09_event_data", "52s", fn_step_09_event_data),
+    ("step_10_event_data", "52s", fn_step_10_event_data),
+    ("step_11_event_data", "52s", fn_step_11_event_data),
+    ("step_12_event_data", "52s", fn_step_12_event_data),
+    ("step_13_event_data", "52s", fn_step_13_event_data),
+    ("step_14_event_data", "52s", fn_step_14_event_data),
+    ("step_15_event_data", "52s", fn_step_15_event_data),
+    ("step_16_event_data", "52s", fn_step_16_event_data),
     # 1022
     ("arp_gate_time", "B", "default_gate_time"),
-    ("arp_rate", "B", 10),
+    ("arp_rate", "B", 5),   # **
 )
+# ** Seems to be off by 1 in Korg's docs; set to 5 to get 16th notes.
+# Minilogue arp only plays 16th notes unless you halve the tempo?
 
 
 favorite_template = """\
@@ -471,6 +601,147 @@ favorite_template = """\
 </xd_Favorite>
 """
 
+
+"""
+og-step-data
++-------+-------+---------+----------------------------------------------+
+| Offset|  Bit  |  Range  |  Description                                 |
++-------+-------+---------+----------------------------------------------+
+|   0   |       |  0~127  | Note No (1)                           0~127  |
++-------+-------+---------+----------------------------------------------+
+|   1   |       |  0~127  | Note No (2)                           0~127  |
++-------+-------+---------+----------------------------------------------+
+|   2   |       |  0~127  | Note No (3)                           0~127  |
++-------+-------+---------+----------------------------------------------+
+|   3   |       |  0~127  | Note No (4)                           0~127  |
++-------+-------+---------+----------------------------------------------+
+|   4   |       |  0~127  | Velocity No (1) 0,1~127=NoEvent,Velocity1~127|
++-------+-------+---------+----------------------------------------------+
+|   5   |       |  0~127  | Velocity No (2) 0,1~127=NoEvent,Velocity1~127|
++-------+-------+---------+----------------------------------------------+
+|   6   |       |  0~127  | Velocity No (3) 0,1~127=NoEvent,Velocity1~127|
++-------+-------+---------+----------------------------------------------+
+|   7   |       |  0~127  | Velocity No (4) 0,1~127=NoEvent,Velocity1~127|
++-------+-------+---------+----------------------------------------------+
+|   8   |  0-6  |  0~127  | Gate time (1)        0~72,73~127=0%~100%,TIE |
+|   8   |   7   |   0,1   | Trigger switch (1)    0,1=Off,On  *ntoe S4-1 |
++-------+-------+---------+----------------------------------------------+
+|   9   |  0-6  |  0~127  | Gate time (2)        0~72,73~127=0%~100%,TIE |
+|   9   |   7   |   0,1   | Trigger switch (2)    0,1=Off,On  *ntoe S4-1 |
++-------+-------+---------+----------------------------------------------+
+|  10   |  0-6  |  0~127  | Gate time (3)        0~72,73~127=0%~100%,TIE |
+|  10   |   7   |   0,1   | Trigger switch (3)    0,1=Off,On  *ntoe S4-1 |
++-------+-------+---------+----------------------------------------------+
+|  11   |  0-6  |  0~127  | Gate time (4)        0~72,73~127=0%~100%,TIE |
+|  11   |   7   |   0,1   | Trigger switch (4)    0,1=Off,On  *ntoe S4-1 |
++-------+-------+---------+----------------------------------------------+
+|  12   |       |  0~255  | Motion Slot 1 Data 1        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  13   |       |  0~255  | Motion Slot 1 Data 2        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  14   |       |  0~255  | Motion Slot 2 Data 1        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  15   |       |  0~255  | Motion Slot 2 Data 2        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  16   |       |  0~255  | Motion Slot 3 Data 1        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  17   |       |  0~255  | Motion Slot 3 Data 2        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  18   |       |  0~255  | Motion Slot 4 Data 1        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+|  19   |       |  0~255  | Motion Slot 4 Data 2        0~255 *note S4-2 |
++-------+-------+---------+----------------------------------------------+
+
+xd-step-data
++-------+-------+---------+-----------------------------------------------+
+| Offset|  Bit  |  Range  |  Description                                  |
++-------+-------+---------+-----------------------------------------------+
+|   0   |       |  0~127  | Note No (1)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   1   |       |  0~127  | Note No (2)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   2   |       |  0~127  | Note No (3)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   3   |       |  0~127  | Note No (4)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   4   |       |  0~127  | Note No (5)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   5   |       |  0~127  | Note No (6)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   6   |       |  0~127  | Note No (7)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   7   |       |  0~127  | Note No (8)                            0~127  |
++-------+-------+---------+-----------------------------------------------+
+|   8   |       |  0~127  | Velocity No (1) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|   9   |       |  0~127  | Velocity No (2) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  10   |       |  0~127  | Velocity No (3) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  11   |       |  0~127  | Velocity No (4) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  12   |       |  0~127  | Velocity No (5) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  13   |       |  0~127  | Velocity No (6) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  14   |       |  0~127  | Velocity No (7) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  15   |       |  0~127  | Velocity No (8) 0,1~127=NoEvent,Velocity1~127 |
++-------+-------+---------+-----------------------------------------------+
+|  16   |  0-6  |  0~127  | Gate time (1)         0~72,73~127=0%~100%,TIE |
+|  16   |   7   |   0,1   | Trigger switch (1)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  17   |  0-6  |  0~127  | Gate time (2)         0~72,73~127=0%~100%,TIE |
+|  17   |   7   |   0,1   | Trigger switch (2)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  18   |  0-6  |  0~127  | Gate time (3)         0~72,73~127=0%~100%,TIE |
+|  18   |   7   |   0,1   | Trigger switch (3)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  19   |  0-6  |  0~127  | Gate time (4)         0~72,73~127=0%~100%,TIE |
+|  19   |   7   |   0,1   | Trigger switch (4)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  20   |  0-6  |  0~127  | Gate time (5)         0~72,73~127=0%~100%,TIE |
+|  20   |   7   |   0,1   | Trigger switch (5)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  21   |  0-6  |  0~127  | Gate time (6)         0~72,73~127=0%~100%,TIE |
+|  21   |   7   |   0,1   | Trigger switch (6)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  22   |  0-6  |  0~127  | Gate time (7)         0~72,73~127=0%~100%,TIE |
+|  22   |   7   |   0,1   | Trigger switch (7)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+|  23   |  0-6  |  0~127  | Gate time (8)         0~72,73~127=0%~100%,TIE |
+|  23   |   7   |   0,1   | Trigger switch (8)     0,1=Off,On  *note S3-1 |
++-------+-------+---------+-----------------------------------------------+
+| 24~30 |       |         | Motion Slot 1                      *note S3-2 |
++-------+-------+---------+-----------------------------------------------+
+| 31~37 |       |         | Motion Slot 2                      *note S3-2 |
++-------+-------+---------+-----------------------------------------------+
+| 38~44 |       |         | Motion Slot 3                      *note S3-2 |
++-------+-------+---------+-----------------------------------------------+
+| 45~51 |       |         | Motion Slot 4                      *note S3-2 |
++-------+-------+---------+-----------------------------------------------+
+
++-------+-------+---------+-------------------------------------+
+| Offset|  Bit  |  Range  |  Description                        |
++-------+-------+---------+-------------------------------------+
+|   0   |       |  0~255  |  Motion Slot x DATA 1(bit2-9)       | 
+|   1   |       |  0~255  |  Motion Slot x DATA 2(bit2-9)       | 
+|   2   |       |  0~255  |  Motion Slot x DATA 3(bit2-9)       | 
+|   3   |       |  0~255  |  Motion Slot x DATA 4(bit2-9)       | 
+|   4   |       |  0~255  |  Motion Slot x DATA 5(bit2-9)       | 
++-------+-------+---------+-------------------------------------+
+|   5   |  0-1  |   0~3   |  Motion Slot x DATA 1(bit0-1)       | 
+|   5   |  2-3  |   0~3   |  Motion Slot x DATA 2(bit0-1)       | 
+|   5   |  4-5  |   0~3   |  Motion Slot x DATA 3(bit0-1)       | 
+|   5   |  6-7  |   0~3   |  Motion Slot x DATA 4(bit0-1)       | 
++-------+-------+---------+-------------------------------------+
+|   6   |  0-1  |   0~3   |  Motion Slot x DATA 5(bit0-1)       | 
+|   6   |  2~7  |         |  Reserved                           |
++-------+-------+---------+-------------------------------------+
+
+"""
+
+
 """
 Korg's program format tables for the minilogues XD.
 Any personal notes are designated Gn.
@@ -489,8 +760,8 @@ Minilogue XD
 +---------+-------+---------+---------------------------------------------+
 |   18    |       |  0,1    |  KEY TRIG                        0,1=Off,On |
 +---------+-------+---------+---------------------------------------------+
-|   19    | H:0~7 |  0~1023 |  VOICE MODE DEPTH                  *note P2 |
-|   20    | L:0~7 |         |                                             |
+|   19    | L:0~7 |  0~1023 |  VOICE MODE DEPTH                  *note P2 |
+|   20    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
 |   21    |       |  1~4    |  VOICE MODE TYPE *note G2          *note P3 |
 +---------+-------+---------+---------------------------------------------+
@@ -498,28 +769,28 @@ Minilogue XD
 +---------+-------+---------+---------------------------------------------+
 |   23    |       |  0~3    |  VCO 1 OCTAVE              0~3=16',8',4',2' |
 +---------+-------+---------+---------------------------------------------+
-|   24    | H:0~7 |  0~1023 |  VCO 1 PITCH                       *note P5 |
-|   25    | L:0~7 |         |                                             |
+|   24    | L:0~7 |  0~1023 |  VCO 1 PITCH                       *note P5 |
+|   25    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   26    | H:0~7 |  0~1023 |  VCO 1 SHAPE                                |
-|   27    | L:0~7 |         |                                             |
+|   26    | L:0~7 |  0~1023 |  VCO 1 SHAPE                                |
+|   27    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
 |   28    |       |  0~2    |  VCO 2 WAVE                        *note P4 |
 +---------+-------+---------+---------------------------------------------+
 |   29    |       |  0~3    |  VCO 2 OCTAVE              0~3=16',8',4',2' |
 +---------+-------+---------+---------------------------------------------+
-|   30    | H:0~7 |  0~1023 |  VCO 2 PITCH                       *note P5 |
-|   31    | L:0~7 |         |                                             |
+|   30    | L:0~7 |  0~1023 |  VCO 2 PITCH                       *note P5 |
+|   31    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   32    | H:0~7 |  0~1023 |  VCO 2 SHAPE                                |
-|   33    | L:0~7 |         |                                             |
+|   32    | L:0~7 |  0~1023 |  VCO 2 SHAPE                                |
+|   33    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
 |   34    |       |  0,1    |  SYNC                 0,1=SYNC ON, SYNC OFF |
 +---------+-------+---------+---------------------------------------------+
 |   35    |       |  0,1    |  RING                 0,1=RING ON, RING OFF |
 +---------+-------+---------+---------------------------------------------+
-|   36    | H:0~7 |  0~1023 |  CROSS MOD DEPTH                            |
-|   37    | L:0~7 |         |                                             |
+|   36    | L:0~7 |  0~1023 |  CROSS MOD DEPTH                            |
+|   37    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
 |   38    |       |  0~2    |  MULTI TYPE              0~2=NOISE,VPM,USER |
 +---------+-------+---------+---------------------------------------------+
@@ -529,63 +800,63 @@ Minilogue XD
 +---------+-------+---------+---------------------------------------------+
 |   41    |       |  0~15   |  SELECT USER                       *note P8 |
 +---------+-------+---------+---------------------------------------------+
-|   42    | H:0~7 |  0~1023 |  SHAPE NOISE                                |
-|   43    | L:0~7 |         |                                             |
+|   42    | L:0~7 |  0~1023 |  SHAPE NOISE                                |
+|   43    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   44    | H:0~7 |  0~1023 |  SHAPE VPM                                  |
-|   45    | L:0~7 |         |                                             |
+|   44    | L:0~7 |  0~1023 |  SHAPE VPM                                  |
+|   45    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   46    | H:0~7 |  0~1023 |  SHAPE USER                                 |
-|   47    | L:0~7 |         |                                             |
+|   46    | L:0~7 |  0~1023 |  SHAPE USER                                 |
+|   47    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   48    | H:0~7 |  0~1023 |  SHIFT SHAPE NOISE                          |
-|   49    | L:0~7 |         |                                             |
+|   48    | L:0~7 |  0~1023 |  SHIFT SHAPE NOISE                          |
+|   49    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   50    | H:0~7 |  0~1023 |  SHIFT SHAPE VPM                            |
-|   51    | L:0~7 |         |                                             |
+|   50    | L:0~7 |  0~1023 |  SHIFT SHAPE VPM                            |
+|   51    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   52    | H:0~7 |  0~1023 |  SHIFT SHAPE USER                           |
-|   53    | L:0~7 |         |                                             |
+|   52    | L:0~7 |  0~1023 |  SHIFT SHAPE USER                           |
+|   53    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   54    | H:0~7 |  0~1023 |  VCO1 LEVEL                                 |
-|   55    | L:0~7 |         |                                             |
+|   54    | L:0~7 |  0~1023 |  VCO1 LEVEL                                 |
+|   55    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   56    | H:0~7 |  0~1023 |  VCO2 LEVEL                                 |
-|   57    | L:0~7 |         |                                             |
+|   56    | L:0~7 |  0~1023 |  VCO2 LEVEL                                 |
+|   57    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   58    | H:0~7 |  0~1023 |  MULTI LEVEL                                |
-|   59    | L:0~7 |         |                                             |
+|   58    | L:0~7 |  0~1023 |  MULTI LEVEL                                |
+|   59    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   60    | H:0~7 |  0~1023 |  CUTOFF                                     |
-|   61    | L:0~7 |         |                                             |
+|   60    | L:0~7 |  0~1023 |  CUTOFF                                     |
+|   61    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   62    | H:0~7 |  0~1023 |  RESONANCE                                  |
-|   63    | L:0~7 |         |                                             |
+|   62    | L:0~7 |  0~1023 |  RESONANCE                                  |
+|   63    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
 |   64    |       |  0~2    |  CUTOFF DRIVE                      *note P9 |
 +---------+-------+---------+---------------------------------------------+
 |   65    |       |  0~2    |  CUTOFF KEYBOARD TRACK             *note P9 |
 +---------+-------+---------+---------------------------------------------+
-|   66    | H:0~7 |  0~1023 |  AMP EG ATTACK                              |
-|   67    | L:0~7 |         |                                             |
+|   66    | L:0~7 |  0~1023 |  AMP EG ATTACK                              |
+|   67    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   68    | H:0~7 |  0~1023 |  AMP EG DECAY                               |
-|   69    | L:0~7 |         |                                             |
+|   68    | L:0~7 |  0~1023 |  AMP EG DECAY                               |
+|   69    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   70    | H:0~7 |  0~1023 |  AMP EG SUSTAIN                             |
-|   71    | L:0~7 |         |                                             |
+|   70    | L:0~7 |  0~1023 |  AMP EG SUSTAIN                             |
+|   71    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   72    | H:0~7 |  0~1023 |  AMP EG RELEASE                             |
-|   73    | L:0~7 |         |                                             |
+|   72    | L:0~7 |  0~1023 |  AMP EG RELEASE                             |
+|   73    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   74    | H:0~7 |  0~1023 |  EG ATTACK                                  |
-|   75    | L:0~7 |         |                                             |
+|   74    | L:0~7 |  0~1023 |  EG ATTACK                                  |
+|   75    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   76    | H:0~7 |  0~1023 |  EG DECAY                                   |
-|   77    | L:0~7 |         |                                             |
+|   76    | L:0~7 |  0~1023 |  EG DECAY                                   |
+|   77    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   78    | H:0~7 |  0~1023 |  EG INT                           *note P10 |
-|   79    | L:0~7 |         |                                             |
+|   78    | L:0~7 |  0~1023 |  EG INT                           *note P10 |
+|   79    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
 |   80    | H:0~7 |  0~2    |  EG TARGET        0~2=CUTOFF, PITCH2, PITCH |
 +---------+-------+---------+---------------------------------------------+
@@ -593,11 +864,11 @@ Minilogue XD
 +---------+-------+---------+---------------------------------------------+
 |   82    |       |  0~2    |  LFO MODE             0~2=1-SHOT,NORMAL,BPM |
 +---------+-------+---------+---------------------------------------------+
-|   83    | H:0~7 |  0~1023 |  LFO RATE                         *note P11 |
-|   84    | L:0~7 |         |                                             |
+|   83    | L:0~7 |  0~1023 |  LFO RATE                         *note P11 |
+|   84    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   85    | H:0~7 |  0~1023 |  LFO INT                                    |
-|   86    | L:0~7 |         |                                             |
+|   85    | L:0~7 |  0~1023 |  LFO INT              1~1023,512=-511~511,0 |
+|   86    | H:0~1 |         |            -ve range accessed by SHIFT-WAVE |
 +---------+-------+---------+---------------------------------------------+
 |   87    |       |  0~2    |  LFO TARGET          0~2=CUTOFF,SHAPE,PITCH |
 +---------+-------+---------+---------------------------------------------+
@@ -615,31 +886,31 @@ Minilogue XD
 +---------+-------+---------+---------------------------------------------+
 |   94    |       |  0~15   |  MOD FX USER                       *note P8 |
 +---------+-------+---------+---------------------------------------------+
-|   95    | H:0~7 |  0~1023 |  MOD FX TIME                                |
-|   96    | L:0~7 |         |                                             |
+|   95    | L:0~7 |  0~1023 |  MOD FX TIME                                |
+|   96    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   97    | H:0~7 |  0~1023 |  MOD FX DEPTH                               |
-|   98    | L:0~7 |         |                                             |
+|   97    | L:0~7 |  0~1023 |  MOD FX DEPTH                               |
+|   98    | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
 |   99    |       |  0,1    |  DELAY ON/OFF                    0,1=Off,On |
 +---------+-------+---------+---------------------------------------------+
 |   100   |       |  0~19   |  DELAY SUB TYPE                   *note P17 |
 +---------+-------+---------+---------------------------------------------+
-|   101   | H:0~7 |  0~1023 |  DELAY TIME                                 |
-|   102   | L:0~7 |         |                                             |
+|   101   | L:0~7 |  0~1023 |  DELAY TIME                                 |
+|   102   | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   103   | H:0~7 |  0~1023 |  DELAY DEPTH                                |
-|   104   | L:0~7 |         |                                             |
+|   103   | L:0~7 |  0~1023 |  DELAY DEPTH                                |
+|   104   | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
 |   105   |       |  0,1    |  REVERB ON/OFF                   0,1=Off,On |
 +---------+-------+---------+---------------------------------------------+
 |   106   |       |  0~19   |  REVERB SUB TYPE                  *note P18 |
 +---------+-------+---------+---------------------------------------------+
-|   107   | H:0~7 |  0~1023 |  REVERB TIME                                |
-|   108   | L:0~7 |         |                                             |
+|   107   | L:0~7 |  0~1023 |  REVERB TIME                                |
+|   108   | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   109   | H:0~7 |  0~1023 |  REVERB DEPTH                               |
-|   110   | L:0~7 |         |                                             |
+|   109   | L:0~7 |  0~1023 |  REVERB DEPTH                               |
+|   110   | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
 |   111   |       |  0~12   |  BEND RANGE (+)                 OFF~+12Note |
 +---------+-------+---------+---------------------------------------------+
@@ -727,11 +998,11 @@ Minilogue XD
 +---------+-------+---------+---------------------------------------------+
 |   150   |       | 1~25    |  PROGRAM TRANSPOSE             -12~+12 Note |
 +---------+-------+---------+---------------------------------------------+
-|   151   | H:0~7 | 0~1024  |  DELAY DRY WET                              |
-|   152   | L:0~7 |         |                                             |
+|   151   | L:0~7 | 0~1024  |  DELAY DRY WET                              |
+|   152   | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
-|   153   | H:0~7 | 0~1024  |  REVERB DRY WET                             |
-|   154   | L:0~7 |         |                                             |
+|   153   | L:0~7 | 0~1024  |  REVERB DRY WET                             |
+|   154   | H:0~1 |         |                                             |
 +---------+-------+---------+---------------------------------------------+
 |   155   |       |  0~28   |  MIDI AFTER TOUCH ASSIGN          *note P19 |
 +---------+-------+---------+---------------------------------------------+

@@ -8,10 +8,19 @@ from loguetools import og, common
 
 
 def print_patch(patchdata):
+    import copy
+
     patch = common.parse_patchdata(patchdata)
     if common.patch_type(patchdata) == "og":
         patch = og.normalise_og_patch(patch)
-    pprint(vars(patch))
+
+    patchcopy = copy.deepcopy(vars(patch))
+    for key in patchcopy:
+        val = patchcopy[key]
+        if isinstance(val, (bytes, bytearray)) and len(val) > 12:
+            patchcopy[key] = val.hex()
+    pprint(patchcopy)
+
 
 
 def dump(filename, match_name, match_ident, verbose, md5):
@@ -31,7 +40,7 @@ def dump(filename, match_name, match_ident, verbose, md5):
 
     """
     zipobj = zipfile.ZipFile(filename, "r")
-    proglist = common.zip_progbins(zipobj)
+    proglist = common.zipread_progbins(zipobj)
 
     if match_name is not None:
         match_ident = common.id_from_name(zipobj, match_name)
@@ -42,7 +51,7 @@ def dump(filename, match_name, match_ident, verbose, md5):
     for p in proglist:
         patchdata = zipobj.read(p)
         prgname = common.program_name(patchdata)
-        if prgname == "Init Program":
+        if common.is_init_program_name(prgname):
             continue
         checksum = ""
         if md5:

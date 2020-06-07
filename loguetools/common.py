@@ -4,6 +4,7 @@ import struct
 from types import SimpleNamespace
 import fnmatch
 from loguetools import og, xd
+import version
 import re
 import textwrap
 
@@ -42,29 +43,72 @@ class sanitise_patchname():
         return output_name
 
 
-def prog_info_template(flavour):
+init_program_hashes = {
+    'og1': '9d2fd7e2e97edc87306d8360eb881534',
+    'og2': '3c2611b06c1fbb118269a0d9ca764b34',
+    'xd': 'fd6940f683f8b69966fc3fd08bbb5ee3',
+    'prologue': 'a4fa5be24cb09c35a91e81ef2bbf71af',
+}
+def is_init_patch(flavour, hash):
+    """True iff the hash matches the Init Program md5 checksum for the corresponding flavour
+
+    Args:
+        flavour (str): "xd", "og", "prologue"
+        hash (bool): md5 checksum string
+
+    Returns:
+        bool: True iff Init Program matched
+
     """
+    if flavour == "og":
+        return hash in {init_program_hashes["og1"], init_program_hashes["og2"]}
+    else:
+        return init_program_hashes[flavour] == hash
+
+
+def is_init_program_name(name):
+    return name.replace(' ', '').strip() == "InitProgram"
+
+
+flavour_to_product = {
+        "xd":"xd",
+        "og":"minilogue",
+        "prologue":"prologue"
+    }
+
+
+def prog_info_template_xml(flavour, programmer=None, comment=None, copyright=None):
+    """xml template for Prog_nnn.prog_info xml patch elements
 
     Args:
         flavour: "xd", "og", "prologue"
             choose "xd", "minilogue", "prologue"
+        programmer (str), default=None :  programmer field text
+        comment (str), default=None : comment field text
+        copyright (str), default=None : copyright field text
 
     Returns:
         str: formatted xml
 
     """
-    flavour_tx = {"xd":"xd", "og":"minilogue", "prologue":"prologue"}
-    ident = flavour_tx[flavour]
-    prog_info_template = textwrap.dedent(f"""\
-        <?xml version="1.0" encoding="UTF-8"?>
+    # create the file structure
+    root = ET.Element(flavour_to_product[flavour] + "_ProgramInformation")
+    programmer_elem = ET.SubElement(root, "Programmer")
+    programmer_elem.text = programmer
+    comment_elem = ET.SubElement(root, "Comment")
+    comment_elem.text = comment
+    loguetools_version_elem = ET.SubElement(root, "loguetoolsVersion")
+    loguetools_version_elem.text = version.__version__
+    if copyright is not None:
+        copyright_elem = ET.SubElement(root, "Copyright")
+        copyright_elem.text = copyright
 
-        <{ident}_ProgramInformation>
-          <Programmer></Programmer>
-          <Comment></Comment>
-        </{ident}_ProgramInformation>
-        """)
+    # https://stackoverflow.com/a/3095723
+    formatted_xml = minidom.parseString(
+        ET.tostring(root, encoding="utf-8", method="xml")
+    ).toprettyxml(indent="  ")
 
-    return prog_info_template
+    return formatted_xml
 
 
 def fileinfo_xml(flavour, non_init_patch_ids):
@@ -116,33 +160,43 @@ def fileinfo_xml(flavour, non_init_patch_ids):
     return formatted_xml
 
 
+patch_suffixes = {
+    ".mnlgxdprog", ".mnlgprog", ".prlgprog"
+}
+lib_suffixes = {
+    ".mnlgxdpreset", ".mnlgpreset", ".prlgpreset",
+    ".mnlgxdlib", ".mnlglib", ".prlglib"
+}
+
+
 def file_type(suffix):
     """Identify file data as being a minilogue xd, minilogue og, or prologue patch by
     suffix and whether it is a single patch or collection.
 
     Args:
-        suffix (str): One of .mnlgxdlib, .mnlgxdprog, .mnlgpreset, .mnlgprog,
-            .prlglib, or *.prlgprog
-
+        suffix (str): One of
+            ".mnlgxdprog", ".mnlgprog", ".prlgprog"
+            ".mnlgxdpreset", ".mnlgpreset", ".prlgpreset",
+            ".mnlgxdlib", ".mnlglib", ".prlglib"
     Returns:
         str: One of {"xd", "og", "prologue"}
         bool: True iff suffix is a collection
 
     """
-    assert suffix in {
-        ".mnlgxdlib", ".mnlgxdprog", ".mnlgpreset", ".mnlgprog", ".prlglib", ".prlgprog"
-    }
-    if suffix in {".mnlgxdlib", ".mnlgxdprog"}:
+    assert suffix in lib_suffixes | patch_suffixes
+    logue_type = None
+    if suffix in {".mnlgxdpreset", ".mnlgxdlib", ".mnlgxdprog"}:
         logue_type = "xd"
-    if suffix in {".mnlgpreset", ".mnlgprog"}:
+    if suffix in {".mnlgpreset", ".mnlglib", ".mnlgprog"}:
         logue_type = "og"
-    if suffix in {".prlglib", ".prlgprog"}:
+    if suffix in {".prlgpreset", ".prlglib", ".prlgprog"}:
         logue_type = "prologue"
-    if suffix in {".mnlgxdlib", ".mnlgpreset", ".prlglib"}:
+    if suffix in lib_suffixes:
         collection = True
     else:
         collection = False
     return logue_type, collection
+
 
 def patch_type(data):
     """Identify patch data as being a minilogue xd, minilogue og, or prologue patch by
@@ -157,7 +211,7 @@ def patch_type(data):
 
     """
     try:
-        struct.unpack_from("B", data, offset=1779)
+        struct.unpack_from("B", data, offset=1023)
         return "xd"
     except struct.error:
         pass
@@ -190,7 +244,7 @@ def id_from_name(zipobj, name):
         ValueError: If name is not found
 
     """
-    for i, p in enumerate(zip_progbins(zipobj)):
+    for i, p in enumerate(zipread_progbins(zipobj)):
         patchdata = zipobj.read(p)
         prgname = program_name(patchdata)
         if prgname != name:
@@ -202,7 +256,30 @@ def id_from_name(zipobj, name):
     return ident
 
 
-def zip_progbins(zipobj):
+def zipread_all_prog_info(zipobj):
+    """Returns an ordered list of all the contained file block data as a dictionary,
+    keyed by the .bin_info name
+
+    Args:
+        zipobj (zipfile object): patch file or library zipfile object
+
+    Returns:
+        dict: described above
+
+    """
+    names = zipobj.namelist()
+    bin_names = sorted(fnmatch.filter(names, "*.prog_bin"))
+    info_names = sorted(fnmatch.filter(names, "*.prog_info"))
+    all_prog_info = {}
+    for bin_name, info_name in zip(bin_names, info_names):
+        xml = zipobj.read(info_name).decode()
+        tree = ET.fromstring(xml)
+        prog_text_dict = {i.tag:i.text for i in tree.iter()}
+        all_prog_info[bin_name] = prog_text_dict
+    return all_prog_info
+
+
+def zipread_progbins(zipobj):
     """Returns an ordered list of all the contained .prog_bin patch block names
 
     Args:
@@ -215,6 +292,34 @@ def zip_progbins(zipobj):
     names = zipobj.namelist()
     names = sorted(fnmatch.filter(names, "*.prog_bin"))
     return names
+
+
+def author_copyright_from_presetinformation_xml(zipobj):
+    """Parses a PresetInformation.xml file block from a preset pack and returns the
+    Author and Copyright fields
+
+    <minilogue_Preset>
+      <DataID></DataID>
+      <Name>Patches</Name>
+      <Author>Anne Author</Author>
+      <Date></Date>
+      <Prefix></Prefix>
+      <Copyright>Anne Author</Copyright>
+    </minilogue_Preset>
+
+    Args:
+        zipobj (zipfile object): patch file or library zipfile object
+
+    Returns:
+        (str) : author
+        (str) : copyright
+
+    """
+    xml = zipobj.read("PresetInformation.xml").decode()
+    tree = ET.fromstring(xml)
+    author = tree.find("Author").text
+    copyright = tree.find("Copyright").text
+    return author, copyright
 
 
 def program_name(data):

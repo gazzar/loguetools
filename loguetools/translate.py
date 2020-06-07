@@ -60,10 +60,10 @@ def translate(filename, match_name, match_ident, verbose, unskip_init):
 
     """
     zipobj = ZipFile(filename, "r", compression=ZIP_DEFLATED, compresslevel=9)
-    proglist = common.zip_progbins(zipobj)
+    proglist = common.zipread_progbins(zipobj)
 
     input_file = pathlib.Path(filename)
-    assert input_file.suffix in {".mnlgprog", ".mnlgpreset"}
+    assert input_file.suffix in {".mnlgprog", ".mnlgpreset", ".mnlglib"}
     if input_file.suffix == ".mnlgprog":
         # single patch/program
         match_name = input_file
@@ -82,12 +82,24 @@ def translate(filename, match_name, match_ident, verbose, unskip_init):
         patch_ext = ".mnlgxdlib"
     output_file = input_file.with_name(stem).with_suffix(patch_ext)
 
+    # Read any copyright and author information if available
+    copyright = None
+    author = None
+    comment = None
+    if input_file.suffix == ".mnlgpreset":
+        author, copyright = common.author_copyright_from_presetinformation_xml(zipobj)
+
     non_init_patch_ids = []
     with ZipFile(output_file, "w") as xdzip:
         for i, p in enumerate(proglist):
             patchdata = zipobj.read(p)
             prgname = common.program_name(patchdata)
-            if (prgname == "Init Program") and (not unskip_init):
+            flavour = common.patch_type(patchdata)
+            if common.is_init_patch(flavour, hash):
+                # Init Program identified based on hash; i.e. a "True" Init Program
+                continue
+            if common.is_init_program_name(prgname) and not unskip_init:
+                # Init Program found and option not to skip is unchecked
                 continue
             non_init_patch_ids.append(i)
             print(f"{int(p[5:8])+1:03d}: {prgname}")
@@ -100,7 +112,8 @@ def translate(filename, match_name, match_ident, verbose, unskip_init):
             xdzip.writestr(f"Prog_{i:03d}.prog_bin", binary_xd)
 
             # .prog_info record/file
-            xdzip.writestr(f"Prog_{i:03d}.prog_info", common.prog_info_template("xd"))
+            prog_info_xd = common.prog_info_template_xml("xd")
+            xdzip.writestr(f"Prog_{i:03d}.prog_info", prog_info_xd)
 
             if verbose:
                 pprint(vars(patch))
