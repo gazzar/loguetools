@@ -25,12 +25,24 @@ class MainFrame ( wx.Frame ):
 
         gSizer1 = wx.GridSizer( 0, 2, 0, 0 )
 
-        self.toolbar = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL )
+        self.m_panel3 = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+        bSizer5 = wx.BoxSizer( wx.VERTICAL )
+
+        self.toolbar = wx.ToolBar( self.m_panel3, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL )
         self.toolbar.Realize()
 
-        gSizer1.Add( self.toolbar, 0, wx.EXPAND, 5 )
+        bSizer5.Add( self.toolbar, 0, wx.EXPAND, 0 )
 
-        self.m_toolBar_options = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL )
+
+        self.m_panel3.SetSizer( bSizer5 )
+        self.m_panel3.Layout()
+        bSizer5.Fit( self.m_panel3 )
+        gSizer1.Add( self.m_panel3, 1, wx.EXPAND, 0 )
+
+        self.m_panel4 = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+        bSizer4 = wx.BoxSizer( wx.VERTICAL )
+
+        self.m_toolBar_options = wx.ToolBar( self.m_panel4, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL )
         self.m_checkBox_id = wx.CheckBox( self.m_toolBar_options, wx.ID_ANY, u"id", wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_checkBox_id.SetToolTip( u"Prepend id to filename" )
 
@@ -49,7 +61,13 @@ class MainFrame ( wx.Frame ):
         self.m_toolBar_options.AddControl( self.m_checkBox_inits )
         self.m_toolBar_options.Realize()
 
-        gSizer1.Add( self.m_toolBar_options, 0, wx.EXPAND, 5 )
+        bSizer4.Add( self.m_toolBar_options, 0, wx.EXPAND, 0 )
+
+
+        self.m_panel4.SetSizer( bSizer4 )
+        self.m_panel4.Layout()
+        bSizer4.Fit( self.m_panel4 )
+        gSizer1.Add( self.m_panel4, 1, wx.EXPAND, 0 )
 
 
         bSizer.Add( gSizer1, 0, wx.EXPAND, 5 )
