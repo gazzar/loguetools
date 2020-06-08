@@ -1,4 +1,5 @@
 import loguetools.common as common
+import version
 from pathlib import Path
 
 
@@ -56,3 +57,6 @@ def test_file_type():
     logue_type, collection = common.file_type(".mnlgprog")
     assert logue_type == 'og'
     assert collection == False
+
+def test_version():
+    assert len(version.__version__.split('.')) == 3
