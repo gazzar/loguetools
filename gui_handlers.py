@@ -208,3 +208,16 @@ class MyFrame(MainFrame):
         aboutInfo.SetCopyright("3-clause BSD licence")
         aboutInfo.SetWebSite("https://github.com/gazzar/loguetools")
         wx.adv.AboutBox(aboutInfo)
+
+    def OnMouseoverId(self, event):
+        self.m_checkBox_id.SetToolTipString("Prepend id to filename")
+    
+    def OnMouseoverMd5(self, event):
+        self.m_checkBox_md5.SetToolTipString("Append md5 checksum to filename")
+
+    def OnMouseoverVer(self, event):
+        self.m_checkBox_version.SetToolTipString("Append loguetools version to filename")
+
+    def OnMouseoverInits(self, event):
+        self.m_checkBox_inits.SetToolTipString("Include patches named Init Program")
+    
