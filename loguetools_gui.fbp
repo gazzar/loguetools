@@ -374,6 +374,7 @@
                                                 <property name="window_extra_style"></property>
                                                 <property name="window_name"></property>
                                                 <property name="window_style"></property>
+                                                <event name="OnMotion">OnMouseoverId</event>
                                             </object>
                                             <object class="wxCheckBox" expanded="0">
                                                 <property name="BottomDockable">1</property>
@@ -433,6 +434,7 @@
                                                 <property name="window_extra_style"></property>
                                                 <property name="window_name"></property>
                                                 <property name="window_style"></property>
+                                                <event name="OnMotion">OnMouseoverMd5</event>
                                             </object>
                                             <object class="wxCheckBox" expanded="1">
                                                 <property name="BottomDockable">1</property>
@@ -492,6 +494,7 @@
                                                 <property name="window_extra_style"></property>
                                                 <property name="window_name"></property>
                                                 <property name="window_style"></property>
+                                                <event name="OnMotion">OnMouseoverVer</event>
                                             </object>
                                             <object class="wxCheckBox" expanded="0">
                                                 <property name="BottomDockable">1</property>
@@ -551,6 +554,7 @@
                                                 <property name="window_extra_style"></property>
                                                 <property name="window_name"></property>
                                                 <property name="window_style"></property>
+                                                <event name="OnMotion">OnMouseoverInits</event>
                                             </object>
                                         </object>
                                     </object>

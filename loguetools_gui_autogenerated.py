@@ -132,6 +132,10 @@ class MainFrame ( wx.Frame ):
         self.Centre( wx.BOTH )
 
         # Connect Events
+        self.m_checkBox_id.Bind( wx.EVT_MOTION, self.OnMouseoverId )
+        self.m_checkBox_md5.Bind( wx.EVT_MOTION, self.OnMouseoverMd5 )
+        self.m_checkBox_version.Bind( wx.EVT_MOTION, self.OnMouseoverVer )
+        self.m_checkBox_inits.Bind( wx.EVT_MOTION, self.OnMouseoverInits )
         self.listCtrl.Bind( wx.EVT_LIST_ITEM_DESELECTED, self.OnPatchDeselected )
         self.listCtrl.Bind( wx.EVT_LIST_ITEM_SELECTED, self.OnPatchSelected )
         self.Bind( wx.EVT_MENU, self.OnExit, id = self.m_menuItem21.GetId() )
@@ -142,6 +146,18 @@ class MainFrame ( wx.Frame ):
 
 
     # Virtual event handlers, overide them in your derived class
+    def OnMouseoverId( self, event ):
+        event.Skip()
+
+    def OnMouseoverMd5( self, event ):
+        event.Skip()
+
+    def OnMouseoverVer( self, event ):
+        event.Skip()
+
+    def OnMouseoverInits( self, event ):
+        event.Skip()
+
     def OnPatchDeselected( self, event ):
         event.Skip()
 
