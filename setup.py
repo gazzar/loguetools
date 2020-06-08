@@ -1,5 +1,5 @@
 import setuptools
-import version
+from loguetools import version
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
