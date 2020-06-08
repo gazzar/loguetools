@@ -31,3 +31,7 @@ exe = EXE(pyz,
           upx_exclude=[],
           runtime_tmpdir=None,
           console=False )
+app = BUNDLE(exe,
+             name='loguetools.app',
+             icon='icons/tools.ico',
+             bundle_identifier=None)
