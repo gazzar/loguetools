@@ -4,7 +4,7 @@ import struct
 from types import SimpleNamespace
 import fnmatch
 from loguetools import og, xd
-import version
+from loguetools import version
 import re
 import textwrap
 
@@ -48,6 +48,8 @@ init_program_hashes = {
     'og2': '3c2611b06c1fbb118269a0d9ca764b34',
     'xd': 'fd6940f683f8b69966fc3fd08bbb5ee3',
     'prologue': 'a4fa5be24cb09c35a91e81ef2bbf71af',
+    'monologue': '7863e5bf4a351456155b549c24eca178',
+    'kk': 'c2f4605587c157c52c41c9fac56fc5d3',
 }
 def is_init_patch(flavour, hash):
     """True iff the hash matches the Init Program md5 checksum for the corresponding flavour
@@ -73,7 +75,9 @@ def is_init_program_name(name):
 flavour_to_product = {
         "xd":"xd",
         "og":"minilogue",
-        "prologue":"prologue"
+        "prologue":"prologue",
+        "monologue":"monologue",
+        "kk":"KingKORG",
     }
 
 
@@ -81,8 +85,7 @@ def prog_info_template_xml(flavour, programmer=None, comment=None, copyright=Non
     """xml template for Prog_nnn.prog_info xml patch elements
 
     Args:
-        flavour: "xd", "og", "prologue"
-            choose "xd", "minilogue", "prologue"
+        flavour: "xd", "og", "prologue", "monologue", "kk"
         programmer (str), default=None :  programmer field text
         comment (str), default=None : comment field text
         copyright (str), default=None : copyright field text
@@ -115,7 +118,7 @@ def fileinfo_xml(flavour, non_init_patch_ids):
     """Build FileInformation.xml metadata file.
 
     Args:
-        flavour: 
+        flavour: "xd", "og", "prologue", "monologue", "kk"
         non_init_patch_ids (list of ints): 0-based list of non-Init-Program patches
 
     Returns:
@@ -128,7 +131,9 @@ def fileinfo_xml(flavour, non_init_patch_ids):
     product.text = {
         "xd":"minilogue xd",
         "og":"minilogue",
-        "prologue":"prologue"
+        "prologue":"prologue",
+        "monologue":"monologue",
+        "kk":"KingKORG",
     }[flavour]
     contents = ET.SubElement(root, "Contents")
 
@@ -161,11 +166,11 @@ def fileinfo_xml(flavour, non_init_patch_ids):
 
 
 patch_suffixes = {
-    ".mnlgxdprog", ".mnlgprog", ".prlgprog"
+    ".mnlgxdprog", ".mnlgprog", ".prlgprog", ".molgprog", ".kkprog"
 }
 lib_suffixes = {
-    ".mnlgxdpreset", ".mnlgpreset", ".prlgpreset",
-    ".mnlgxdlib", ".mnlglib", ".prlglib"
+    ".mnlgxdpreset", ".mnlgpreset", ".prlgpreset", ".molgpreset",
+    ".mnlgxdlib", ".mnlglib", ".prlglib", ".molglib", ".kklib"
 }
 
 
@@ -175,11 +180,11 @@ def file_type(suffix):
 
     Args:
         suffix (str): One of
-            ".mnlgxdprog", ".mnlgprog", ".prlgprog"
-            ".mnlgxdpreset", ".mnlgpreset", ".prlgpreset",
-            ".mnlgxdlib", ".mnlglib", ".prlglib"
+            ".mnlgxdprog", ".mnlgprog", ".prlgprog", ".molgprog", ".kkprog"
+            ".mnlgxdpreset", ".mnlgpreset", ".prlgpreset", ".molgpreset"
+            ".mnlgxdlib", ".mnlglib", ".prlglib", ".molglib", ".kklib"
     Returns:
-        str: One of {"xd", "og", "prologue"}
+        str: One of {"xd", "og", "prologue", "monologue", "kk"}
         bool: True iff suffix is a collection
 
     """
@@ -191,6 +196,10 @@ def file_type(suffix):
         logue_type = "og"
     if suffix in {".prlgpreset", ".prlglib", ".prlgprog"}:
         logue_type = "prologue"
+    if suffix in {".molgpreset", ".molglib", ".molgprog"}:
+        logue_type = "monologue"
+    if suffix in {".kklib", ".kkprog"}:
+        logue_type = "kk"
     if suffix in lib_suffixes:
         collection = True
     else:
@@ -200,14 +209,16 @@ def file_type(suffix):
 
 def patch_type(data):
     """Identify patch data as being a minilogue xd, minilogue og, or prologue patch by
-    attempting to read from locations valid only for the prologue, then if that fails,
-    the xd. xd, og, and Prologue patches are 1780, 448, and 336 bytes long
+    attempting to read from locations valid only for each data synth flavour.
+    xd, og, monologue, prologue, and kingkorg patches are respectively
+    1024, 448, 448, 336, 320 bytes long. To distinguish between og and monologue, I look
+    for the SEQD string at the following locations; og: 96~99, monologue: 48~51
 
     Args:
         data (packed binary string): patch data
 
     Returns:
-        str: One of {"xd", "og", "prologue"}
+        str: One of {"xd", "og", "monologue", "prologue", "kk"}
 
     """
     try:
@@ -218,13 +229,25 @@ def patch_type(data):
 
     try:
         struct.unpack_from("B", data, offset=447)
-        return "og"
+        # if we got here, it's an og or monologue
+        str4 = struct.unpack_from("4s", data, offset=96)[0].decode('utf-8')
+        if str4 == 'SEQD':
+            return "og"
+        str4 = struct.unpack_from("4s", data, offset=48)[0].decode('utf-8')
+        if str4 == 'SEQD':
+            return "monologue"
     except struct.error:
         pass
 
     try:
         struct.unpack_from("B", data, offset=335)
         return "prologue"
+    except struct.error:
+        pass
+
+    try:
+        struct.unpack_from("B", data, offset=319)
+        return "kk"
     except struct.error:
         pass
 
@@ -246,7 +269,8 @@ def id_from_name(zipobj, name):
     """
     for i, p in enumerate(zipread_progbins(zipobj)):
         patchdata = zipobj.read(p)
-        prgname = program_name(patchdata)
+        flavour = patch_type(patchdata)
+        prgname = program_name(patchdata, flavour)
         if prgname != name:
             continue
         ident = i + 1
@@ -322,17 +346,22 @@ def author_copyright_from_presetinformation_xml(zipobj):
     return author, copyright
 
 
-def program_name(data):
+def program_name(data, flavour):
     """Returns the patch name
 
     Args:
         data (packed binary string): patch data
+        flavour: "xd", "og", "prologue", "monologue", "kk"
 
     Returns:
         str: name
 
     """
-    name = struct.unpack_from("12s", data, offset=4)[0].decode("utf-8").strip("\x00")
+    if flavour == "kk":
+        offset = 0
+    else:
+        offset = 4
+    name = struct.unpack_from("12s", data, offset)[0].decode("utf-8").partition("\x00")[0].strip("\x00")
     return name
 
 

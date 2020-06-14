@@ -5,10 +5,10 @@ import hashlib
 import textwrap
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
-import version
 import data
 import wx
 import wx.adv
+from loguetools import version
 from loguetools import dump, common
 from loguetools.explode import explode
 from loguetools.translate import translate
@@ -99,18 +99,40 @@ class MyFrame(MainFrame):
         # otherwise ask the user what new file to open
         with wx.FileDialog(
             self, "Choose a file",
-            wildcard="".join([
-                "patches|",
-                "*.mnlgxdpreset;*.mnlgxdlib;*.mnlgxdprog;",
-                "*.mnlgpreset;*.mnlglib;*.mnlgprog;",
+            wildcard=\
+                "patches|"
+                "*.mnlgxdpreset;*.mnlgxdlib;*.mnlgxdprog;"
+                "*.mnlgpreset;*.mnlglib;*.mnlgprog;"
+                "*.prlgpreset;*.prlglib;*.prlgprog;"
+                "*.molgpreset;*.molglib;*.molgprog;"
+                "*.kklib;*.kkprog;"
+                "|minilogue (.mnlgpreset;.mnlglib;.mnlgprog)|"
+                "*.mnlgpreset;*.mnlglib;*.mnlgprog;"
+                "|minilogue xd (.mnlgxdpreset;.mnlgxdlib;.mnlgxdprog)|"
+                "*.mnlgxdpreset;*.mnlgxdlib;*.mnlgxdprog;"
+                "|prologue (.prlgpreset;.prlglib;.prlgprog)|"
                 "*.prlgpreset;*.prlglib;*.prlgprog"
-                "|minilogue (.mnlgpreset;.mnlglib;.mnlgprog)|",
-                "*.mnlgpreset;*.mnlglib;*.mnlgprog;",
-                "|minilogue xd (.mnlgxdpreset;.mnlgxdlib;.mnlgxdprog)|",
-                "*.mnlgxdpreset;*.mnlgxdlib;*.mnlgxdprog;",
-                "|prologue (.prlgpreset;.prlglib;.prlgprog)|",
-                "*.prlgpreset;*.prlglib;*.prlgprog"
-            ]),
+                "|monologue (.molgpreset;.molglib;.molgprog)|"
+                "*.molgpreset;*.molglib;*.molgprog"
+                "|KingKORG (.kklib;.kkprog)|"
+                "*.kklib;*.kkprog"
+                "",
+            # wildcard="".join([
+            #     "patches|",
+            #     "*.mnlgxdpreset;*.mnlgxdlib;*.mnlgxdprog;",
+            #     "*.mnlgpreset;*.mnlglib;*.mnlgprog;",
+            #     "*.prlgpreset;*.prlglib;*.prlgprog"
+            #     "|minilogue (.mnlgpreset;.mnlglib;.mnlgprog)|",
+            #     "*.mnlgpreset;*.mnlglib;*.mnlgprog;",
+            #     "|minilogue xd (.mnlgxdpreset;.mnlgxdlib;.mnlgxdprog)|",
+            #     "*.mnlgxdpreset;*.mnlgxdlib;*.mnlgxdprog;",
+            #     "|prologue (.prlgpreset;.prlglib;.prlgprog)|",
+            #     "*.prlgpreset;*.prlglib;*.prlgprog",
+            #     "|monologue (.molgpreset;.molglib;.molgprog)|",
+            #     "*.molgpreset;*.molglib;*.molgprog",
+            #     "|KingKORG (.kklib;.kkprog)|",
+            #     "*.kklib;*.kkprog",
+            # ]),
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
         ) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -157,10 +179,10 @@ class MyFrame(MainFrame):
         lc.SetColumnWidth(2, 50)
         for i, p in enumerate(self.proglist):
             patchdata = self.zipobj.read(p)
-            prgname = common.program_name(patchdata)
             hash = hashlib.md5(patchdata).hexdigest()
             flavour = common.patch_type(patchdata)
             if not common.is_init_patch(flavour, hash):
+                prgname = common.program_name(patchdata, flavour)
                 lc.Append([i+1, prgname, hash[:4]])
 
     def OnPatchSelected(self, event):
