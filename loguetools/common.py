@@ -249,9 +249,9 @@ def patch_type(data):
         if is_init_patch("monologue", hash):
             # An incorrectly initialised monologue Init Program patch
             return "monologue"
-        if struct.unpack_from("4s", data, offset=48)[0].decode('utf-8') == "SEQD":
+        if struct.unpack_from("4s", data, offset=48)[0] == b"SEQD":
             return "monologue"
-        if struct.unpack_from("4s", data, offset=96)[0].decode('utf-8') == "SEQD":
+        if struct.unpack_from("4s", data, offset=96)[0] == b"SEQD":
             return "og"
     except struct.error:
         pass
