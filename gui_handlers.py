@@ -36,7 +36,7 @@ class MyFileDropTarget(wx.FileDropTarget):
 
     def OnDropFiles(self, x, y, filenames):
         filepath = filenames[0]
-        if Path(filepath).suffix in common.patch_suffixes | common.lib_suffixes:
+        if Path(filepath).suffix in common.all_suffixes:
             # validated extension
             self.parent.loadfile(filepath)
         return True
@@ -117,22 +117,6 @@ class MyFrame(MainFrame):
                 "|KingKORG (.kklib;.kkprog)|"
                 "*.kklib;*.kkprog"
                 "",
-            # wildcard="".join([
-            #     "patches|",
-            #     "*.mnlgxdpreset;*.mnlgxdlib;*.mnlgxdprog;",
-            #     "*.mnlgpreset;*.mnlglib;*.mnlgprog;",
-            #     "*.prlgpreset;*.prlglib;*.prlgprog"
-            #     "|minilogue (.mnlgpreset;.mnlglib;.mnlgprog)|",
-            #     "*.mnlgpreset;*.mnlglib;*.mnlgprog;",
-            #     "|minilogue xd (.mnlgxdpreset;.mnlgxdlib;.mnlgxdprog)|",
-            #     "*.mnlgxdpreset;*.mnlgxdlib;*.mnlgxdprog;",
-            #     "|prologue (.prlgpreset;.prlglib;.prlgprog)|",
-            #     "*.prlgpreset;*.prlglib;*.prlgprog",
-            #     "|monologue (.molgpreset;.molglib;.molgprog)|",
-            #     "*.molgpreset;*.molglib;*.molgprog",
-            #     "|KingKORG (.kklib;.kkprog)|",
-            #     "*.kklib;*.kkprog",
-            # ]),
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
         ) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
