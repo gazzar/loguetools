@@ -98,7 +98,8 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
     comment = None
     if input_file.suffix == ".mnlgpreset":
         dataid, name, author, version, numofprog, date, prefix, copyright = common.all_from_presetinformation_xml(zipobj)
-
+        if dataid is None:
+          dataid = name
 
     non_init_patch_ids = []
     with ZipFile(output_file, "w") as xdzip:

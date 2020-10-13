@@ -307,7 +307,7 @@ def eg_and_lfo_mapping(src):
         lfo_mode = 0       # LFO MODE 0~2=1-SHOT,NORMAL,BPM
         # Translate the LFO RATE value from the EG AD values
         # Choose saw or triangle
-        if src.eg_attack / (src.eg_attack + src.eg_decay) < 0.25:
+        if (src.eg_attack + src.eg_decay) == 0 or src.eg_attack / (src.eg_attack + src.eg_decay) < 0.25:
             lfo_wave = 2    # saw
         else:
             lfo_wave = 1    # triangle
