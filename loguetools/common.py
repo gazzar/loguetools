@@ -111,12 +111,13 @@ def prog_info_template_xml(flavour, programmer=None, comment=None, copyright=Non
     return formatted_xml
 
 
-def fileinfo_xml(flavour, non_init_patch_ids):
+def fileinfo_xml(flavour, non_init_patch_ids, force_preset):
     """Build FileInformation.xml metadata file.
 
     Args:
         flavour: 
         non_init_patch_ids (list of ints): 0-based list of non-Init-Program patches
+        force_preset: preset file output
 
     Returns:
         str: formatted xml
@@ -133,11 +134,15 @@ def fileinfo_xml(flavour, non_init_patch_ids):
     contents = ET.SubElement(root, "Contents")
 
     contents.set("NumProgramData", str(len(non_init_patch_ids)))
-    contents.set("NumPresetInformation", "0")
+    if force_preset:
+        contents.set("NumPresetInformation", "1")
+        ET.SubElement(ET.SubElement(contents, "PresetInformation"), "File").text = "PresetInformation.xml"
+    else:
+        contents.set("NumPresetInformation", "0")
     contents.set("NumTuneScaleData", "0")
     contents.set("NumTuneOctData", "0")
 
-    if len(non_init_patch_ids) <= 1:
+    if len(non_init_patch_ids) <= 1 or force_preset:
         contents.set("NumFavoriteData", "0")
     else:
         contents.set("NumFavoriteData", "1")
@@ -151,6 +156,41 @@ def fileinfo_xml(flavour, non_init_patch_ids):
         prog_info.text = f"Prog_{i:03d}.prog_info"
         prog_bin = ET.SubElement(prog, "ProgramBinary")
         prog_bin.text = f"Prog_{i:03d}.prog_bin"
+
+    # https://stackoverflow.com/a/3095723
+    formatted_xml = minidom.parseString(
+        ET.tostring(root, encoding="utf-8", method="xml")
+    ).toprettyxml(indent="  ")
+
+    return formatted_xml
+
+
+def presetinfo_xml(flavour, dataid, name, author, version, numofprog, date, prefix, copyright):
+    """Build PresetInformation.xml metadata file.
+
+    Args:
+        flavour:
+        force_preset: preset file output
+
+    Returns:
+        str: formatted xml
+
+    """
+    # create the file structure
+    root = ET.Element({
+        "mo":"monologue_Preset",
+        "xd":"xd_Preset",
+        "og":"minilogue_Preset",
+        "prologue":"prologue_Preset"
+    }[flavour])
+    ET.SubElement(root, "DataID").text = dataid
+    ET.SubElement(root, "Name").text = name
+    ET.SubElement(root, "Author").text = author
+    ET.SubElement(root, "Version").text = version
+    ET.SubElement(root, "NumOfProg").text = numofprog
+    ET.SubElement(root, "Date").text = date
+    ET.SubElement(root, "Prefix").text = prefix
+    ET.SubElement(root, "Copyright").text = copyright
 
     # https://stackoverflow.com/a/3095723
     formatted_xml = minidom.parseString(
@@ -320,6 +360,36 @@ def author_copyright_from_presetinformation_xml(zipobj):
     author = tree.find("Author").text
     copyright = tree.find("Copyright").text
     return author, copyright
+
+def all_from_presetinformation_xml(zipobj):
+    """Parses a PresetInformation.xml file block from a preset pack and returns all
+    fields
+
+    Args:
+        zipobj (zipfile object): patch file or library zipfile object
+
+    Returns:
+        (str) : dataid
+        (str) : name
+        (str) : author
+        (str) : version
+        (str) : numofprog
+        (str) : date
+        (str) : prefix
+        (str) : copyright
+
+    """
+    xml = zipobj.read("PresetInformation.xml").decode()
+    tree = ET.fromstring(xml)
+    dataid = tree.find("DataID").text
+    name = tree.find("Name").text
+    author = tree.find("Author").text
+    version = tree.find("Version").text
+    numofprog = tree.find("NumOfProg").text
+    date = tree.find("Date").text
+    prefix = tree.find("Prefix").text
+    copyright = tree.find("Copyright").text
+    return dataid, name, author, version, numofprog, date, prefix, copyright
 
 
 def program_name(data):

@@ -47,7 +47,7 @@ def convert_og_to_xd(patch):
     return patch_xd, binary_xd
 
 
-def translate(filename, match_name, match_ident, verbose, unskip_init):
+def translate(filename, match_name, match_ident, verbose, unskip_init, force_preset):
     """Translate a minilogue program or program bank to the minilogue xd.
 
     \b
@@ -80,14 +80,25 @@ def translate(filename, match_name, match_ident, verbose, unskip_init):
     else:
         stem = input_file.stem
         patch_ext = ".mnlgxdlib"
+
+    if force_preset:
+        patch_ext = ".mnlgxdpreset"
+
     output_file = input_file.with_name(stem).with_suffix(patch_ext)
 
-    # Read any copyright and author information if available
+    # Read any information from preset if available
+    dataid = stem
+    name = stem
+    version = None
+    numofprog = str(len(proglist))
+    date = None
+    prefix = None
     copyright = None
     author = None
     comment = None
     if input_file.suffix == ".mnlgpreset":
-        author, copyright = common.author_copyright_from_presetinformation_xml(zipobj)
+        dataid, name, author, version, numofprog, date, prefix, copyright = common.all_from_presetinformation_xml(zipobj)
+
 
     non_init_patch_ids = []
     with ZipFile(output_file, "w") as xdzip:
@@ -119,12 +130,15 @@ def translate(filename, match_name, match_ident, verbose, unskip_init):
                 pprint(vars(patch))
                 print()
 
-        if len(proglist) > 1:
+        if len(proglist) > 1 and not force_preset:
             # FavoriteData.fav_data record/file
             xdzip.writestr(f"FavoriteData.fav_data", xd.favorite_template)
 
         # FileInformation.xml record/file
-        xdzip.writestr(f"FileInformation.xml", common.fileinfo_xml("xd", non_init_patch_ids))
+        xdzip.writestr(f"FileInformation.xml", common.fileinfo_xml("xd", non_init_patch_ids, force_preset))
+
+        if force_preset:
+            xdzip.writestr(f"PresetInformation.xml", common.presetinfo_xml("xd", dataid, name, author, version, numofprog, date, prefix, copyright))
 
         print("Wrote", output_file)
 
@@ -135,8 +149,9 @@ def translate(filename, match_name, match_ident, verbose, unskip_init):
 @click.option("--match_ident", "-i", type=int, help="Dump the patch with ident ID")
 @click.option("--verbose", "-v", is_flag=True, help="List the patch contents")
 @click.option("--unskip_init", "-u", is_flag=True, help="Don't skip patches named Init Program")
-def click_translate(filename, match_name, match_ident, verbose, unskip_init):
-    translate(filename, match_name, match_ident, verbose, unskip_init)
+@click.option("--force_preset", "-p", is_flag=True, help="Translate to preset file")
+def click_translate(filename, match_name, match_ident, verbose, unskip_init, force_preset):
+    translate(filename, match_name, match_ident, verbose, unskip_init, force_preset)
 
 
 if __name__ == "__main__":
