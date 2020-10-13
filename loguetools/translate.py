@@ -90,7 +90,6 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
     dataid = stem
     name = stem
     version = None
-    numofprog = str(len(proglist))
     date = None
     prefix = None
     copyright = None
@@ -102,6 +101,7 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
           dataid = name
 
     non_init_patch_ids = []
+    numofprog = 0
     with ZipFile(output_file, "w") as xdzip:
         for i, p in enumerate(proglist):
             patchdata = zipobj.read(p)
@@ -127,6 +127,8 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
             prog_info_xd = common.prog_info_template_xml("xd")
             xdzip.writestr(f"Prog_{i:03d}.prog_info", prog_info_xd)
 
+            numofprog += 1
+
             if verbose:
                 pprint(vars(patch))
                 print()
@@ -139,7 +141,7 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
         xdzip.writestr(f"FileInformation.xml", common.fileinfo_xml("xd", non_init_patch_ids, force_preset))
 
         if force_preset:
-            xdzip.writestr(f"PresetInformation.xml", common.presetinfo_xml("xd", dataid, name, author, version, numofprog, date, prefix, copyright))
+            xdzip.writestr(f"PresetInformation.xml", common.presetinfo_xml("xd", dataid, name, author, version, str(numofprog), date, prefix, copyright))
 
         print("Wrote", output_file)
 
