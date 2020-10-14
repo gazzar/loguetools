@@ -56,7 +56,8 @@ def convert_from_syx(filename):
             0x2C:"og",
             0x4B:"prologue"
         }[ord(f.read(1))]
-        f.seek(7)
+        if ord(f.read(1)) == 0x4C:
+          f.seek(9)
         b = 0
         h = 0
         patch_data = bytearray()
