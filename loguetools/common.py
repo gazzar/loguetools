@@ -71,6 +71,7 @@ def is_init_program_name(name):
 
 
 flavour_to_product = {
+        "mo":"monologue",
         "xd":"xd",
         "og":"minilogue",
         "prologue":"prologue"
@@ -127,6 +128,7 @@ def fileinfo_xml(flavour, non_init_patch_ids, force_preset):
     root = ET.Element("KorgMSLibrarian_Data")
     product = ET.SubElement(root, "Product")
     product.text = {
+        "mo":"monologue",
         "xd":"minilogue xd",
         "og":"minilogue",
         "prologue":"prologue"
@@ -177,12 +179,7 @@ def presetinfo_xml(flavour, dataid, name, author, version, numofprog, date, pref
 
     """
     # create the file structure
-    root = ET.Element({
-        "mo":"monologue_Preset",
-        "xd":"xd_Preset",
-        "og":"minilogue_Preset",
-        "prologue":"prologue_Preset"
-    }[flavour])
+    root = ET.Element(flavour_to_product[flavour] + "_Preset")
     ET.SubElement(root, "DataID").text = dataid
     ET.SubElement(root, "Name").text = name
     ET.SubElement(root, "Author").text = author
@@ -225,6 +222,8 @@ def file_type(suffix):
     """
     assert suffix in lib_suffixes | patch_suffixes
     logue_type = None
+    if suffix in {".molgpreset", ".molglib", ".molgprog"}:
+        logue_type = "mo"
     if suffix in {".mnlgxdpreset", ".mnlgxdlib", ".mnlgxdprog"}:
         logue_type = "xd"
     if suffix in {".mnlgpreset", ".mnlglib", ".mnlgprog"}:
