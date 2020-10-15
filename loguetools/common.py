@@ -48,6 +48,7 @@ init_program_hashes = {
     'og2': '3c2611b06c1fbb118269a0d9ca764b34',
     'xd': 'fd6940f683f8b69966fc3fd08bbb5ee3',
     'prologue': 'a4fa5be24cb09c35a91e81ef2bbf71af',
+    'molg': 'c5594cd3363607bdfbf0803e0ae05b98'
 }
 def is_init_patch(flavour, hash):
     """True iff the hash matches the Init Program md5 checksum for the corresponding flavour
@@ -71,7 +72,7 @@ def is_init_program_name(name):
 
 
 flavour_to_product = {
-        "mo":"monologue",
+        "molg":"monologue",
         "xd":"xd",
         "og":"minilogue",
         "prologue":"prologue"
@@ -128,7 +129,7 @@ def fileinfo_xml(flavour, non_init_patch_ids, force_preset):
     root = ET.Element("KorgMSLibrarian_Data")
     product = ET.SubElement(root, "Product")
     product.text = {
-        "mo":"monologue",
+        "molg":"monologue",
         "xd":"minilogue xd",
         "og":"minilogue",
         "prologue":"prologue"
@@ -198,11 +199,11 @@ def presetinfo_xml(flavour, dataid, name, author, version, numofprog, date, pref
 
 
 patch_suffixes = {
-    ".mnlgxdprog", ".mnlgprog", ".prlgprog"
+    ".mnlgxdprog", ".mnlgprog", ".prlgprog", ".molgprog"
 }
 lib_suffixes = {
-    ".mnlgxdpreset", ".mnlgpreset", ".prlgpreset",
-    ".mnlgxdlib", ".mnlglib", ".prlglib"
+    ".mnlgxdpreset", ".mnlgpreset", ".prlgpreset", ".molgpreset"
+    ".mnlgxdlib", ".mnlglib", ".prlglib", ".molgplib"
 }
 
 
@@ -223,7 +224,7 @@ def file_type(suffix):
     assert suffix in lib_suffixes | patch_suffixes
     logue_type = None
     if suffix in {".molgpreset", ".molglib", ".molgprog"}:
-        logue_type = "mo"
+        logue_type = "molg"
     if suffix in {".mnlgxdpreset", ".mnlgxdlib", ".mnlgxdprog"}:
         logue_type = "xd"
     if suffix in {".mnlgpreset", ".mnlglib", ".mnlgprog"}:
@@ -257,7 +258,10 @@ def patch_type(data):
 
     try:
         struct.unpack_from("B", data, offset=447)
-        return "og"
+        if struct.unpack_from("4s", data, offset=0x30)[0].decode('ansi') == 'SEQD':
+            return "molg"
+        else:
+            return "og"
     except struct.error:
         pass
 

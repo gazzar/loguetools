@@ -51,7 +51,7 @@ def convert_from_syx(filename):
     with open(filename, "rb") as f:
         f.seek(5)
         flavor = {
-            0x44:"mo",
+            0x44:"molg",
             0x51:"xd",
             0x2C:"og",
             0x4B:"prologue"
@@ -107,7 +107,7 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
         proglist = ["Prog_000.prog_bin"]
         (flavor, patchdata) = convert_from_syx(input_file)
         patch_ext = {
-            "mo":".molgprog",
+            "molg":".molgprog",
             "xd":".mnlgxdprog",
             "og":".mnlgprog",
             "prologue":".prlgprog"

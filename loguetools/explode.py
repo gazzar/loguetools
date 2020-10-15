@@ -45,13 +45,16 @@ def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_
     elif input_file.suffix in {".prlgpreset", ".prlglib"}:
         suffix = ".prlgprog"
         flavour = "prologue"
+    elif input_file.suffix in {".molgpreset", ".molglib"}:
+        suffix = ".molgprog"
+        flavour = "molg"
     fileinfo_xml = common.fileinfo_xml(flavour, [0], False)
 
     # Read any copyright and author information if available
     copyright = None
     author = None
     comment = None
-    if input_file.suffix in {".mnlgxdpreset", ".mnlgpreset", ".prlgpreset"}:
+    if input_file.suffix in {".mnlgxdpreset", ".mnlgpreset", ".prlgpreset", ".molgpreset"}:
         author, copyright = common.author_copyright_from_presetinformation_xml(zipobj)
 
     sanitise = common.sanitise_patchname()
