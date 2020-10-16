@@ -6,7 +6,7 @@ import struct
 from pprint import pprint
 import pathlib
 import re
-from loguetools import og, xd, common
+from loguetools import og, xd, prlg as prologue, common
 
 
 XD_PATCH_LENGTH = 1024
@@ -177,11 +177,18 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
                 print()
 
         if len(proglist) > 1 and not force_preset:
-            # FavoriteData.fav_data record/file
-            xdzip.writestr(f"FavoriteData.fav_data", xd.favorite_template)
+            if flavor == "prologue":
+                xdzip.writestr(f"LivesetData.lvs_data", getattr(globals()[flavor], "favorite_template"))
+            else:
+                # FavoriteData.fav_data record/file
+                try:
+                    xdzip.writestr(f"FavoriteData.fav_data", getattr(globals()[flavor], "favorite_template"))
+                except:
+                    pass
 
         if force_preset:
             xdzip.writestr(f"PresetInformation.xml", common.presetinfo_xml(flavor, dataid, name, author, version, str(numofprog), date, prefix, copyright))
+
 
         # FileInformation.xml record/file
         xdzip.writestr(f"FileInformation.xml", common.fileinfo_xml(flavor, non_init_patch_ids, force_preset))

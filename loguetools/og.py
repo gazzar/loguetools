@@ -306,6 +306,24 @@ def decode_src_string(src_string):
     return src_name, mask, shift
 
 
+favorite_template = """\
+<?xml version="1.0" encoding="UTF-8"?>
+
+<minilogue_Favorite>
+  <Bank>
+    <Data>0</Data>
+    <Data>35</Data>
+    <Data>67</Data>
+    <Data>95</Data>
+    <Data>108</Data>
+    <Data>136</Data>
+    <Data>151</Data>
+    <Data>176</Data>
+  </Bank>
+</minilogue_Favorite>
+"""
+
+
 """
 Korg's program format tables for the minilogue original (OG).
 Any personal notes are designated Gn.

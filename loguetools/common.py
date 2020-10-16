@@ -3,7 +3,7 @@ from xml.dom import minidom
 import struct
 from types import SimpleNamespace
 import fnmatch
-from loguetools import og, xd
+from loguetools import og, xd, prlg as prologue
 import version
 import re
 import textwrap
@@ -146,12 +146,21 @@ def fileinfo_xml(flavour, non_init_patch_ids, force_preset):
     contents.set("NumTuneOctData", "0")
 
     if len(non_init_patch_ids) <= 1 or force_preset:
-        contents.set("NumFavoriteData", "0")
+        if flavour == "prologue":
+            contents.set("NumLivesetData", "0")
+        elif flavour != "molg":
+            contents.set("NumFavoriteData", "0")
     else:
-        contents.set("NumFavoriteData", "1")
-        fave = ET.SubElement(contents, "FavoriteData")
-        fave_info = ET.SubElement(fave, "File")
-        fave_info.text = "FavoriteData.fav_data"
+        if flavour == "prologue":
+            contents.set("NumLivesetData", "1")
+            fave = ET.SubElement(contents, "LivesetData")
+            fave_info = ET.SubElement(fave, "File")
+            fave_info.text = "LivesetData.lvs_data"
+        elif flavour != "molg":
+            contents.set("NumFavoriteData", "1")
+            fave = ET.SubElement(contents, "FavoriteData")
+            fave_info = ET.SubElement(fave, "File")
+            fave_info.text = "FavoriteData.fav_data"
 
     for i in non_init_patch_ids:
         prog = ET.SubElement(contents, "ProgramData")

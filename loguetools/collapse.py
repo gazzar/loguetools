@@ -6,7 +6,7 @@ import struct
 from pprint import pprint
 import pathlib
 import re
-from loguetools import og, xd, common
+from loguetools import og, xd, prlg as prologue, common
 import glob
 from os.path import join, split, splitext
 
@@ -44,6 +44,9 @@ def collapse(filename, unskip_init, force_preset):
             patchdata = zipobj.read(common.zipread_progbins(zipobj)[0])
             prgname = common.program_name(patchdata)
             flavour = common.patch_type(patchdata)
+            if flavor != flavour:
+                # actual patch type did not match with the first one
+                continue
             if common.is_init_patch(flavour, hash):
                 # Init Program identified based on hash; i.e. a "True" Init Program
                 continue
@@ -57,16 +60,21 @@ def collapse(filename, unskip_init, force_preset):
             xdzip.writestr(f"Prog_{i:03d}.prog_bin", patchdata)
 
             # .prog_info record/file
-            prog_info_xd = common.prog_info_template_xml(flavor)
-            xdzip.writestr(f"Prog_{i:03d}.prog_info", prog_info_xd)
+            prog_info = common.prog_info_template_xml(flavor)
+            xdzip.writestr(f"Prog_{i:03d}.prog_info", prog_info)
 
             numofprog += 1
 
         if force_preset:
             xdzip.writestr(f"PresetInformation.xml", common.presetinfo_xml(flavor, dataid, name, author, version, str(numofprog), date, prefix, copyright))
+        elif flavor == "prologue":
+            xdzip.writestr(f"LivesetData.lvs_data", getattr(globals()[flavor], "favorite_template"))
         else:
             # FavoriteData.fav_data record/file
-            xdzip.writestr(f"FavoriteData.fav_data", xd.favorite_template)
+            try:
+                xdzip.writestr(f"FavoriteData.fav_data", getattr(globals()[flavor], "favorite_template"))
+            except:
+                pass
 
         # FileInformation.xml record/file
         xdzip.writestr(f"FileInformation.xml", common.fileinfo_xml(flavor, non_init_patch_ids, force_preset))
