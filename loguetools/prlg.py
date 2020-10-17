@@ -1,8 +1,12 @@
+from collections import namedtuple
+
+
+patch_value = namedtuple("Field", ["name", "type"])
 
 patch_struct = (
     # 0
     ("str_PROG", "4s"),
-    ("program_name"),
+    ("program_name", "12s"),
     ("octave", "B"),
     ("sub_on", "B"),
     ("edit_timbre", "B"),
@@ -11,7 +15,7 @@ patch_struct = (
     ("reserved1", "B"),
     ("main_sub_position", "B"),
     ("split_point", "B"),
-    ("bpm", "<H", "bpm"),
+    ("bpm", "<H"),
     ("arp_target", "B"),
     ("reserved2", "2B"),
     ("category", "B"),
@@ -37,7 +41,7 @@ patch_struct = (
     ("arp_gate_time", "B"),
     ("arp_rate", "B"),
     ("delay_dry_wet", "<H"),
-    ("reserved5", "3"),
+    ("reserved5", "3B"),
     ("delay_reverb_type", "B"),
     ("delay_delay_time", "<H"),
     ("delay_depth", "<H"),
@@ -83,7 +87,7 @@ patch_struct = (
     ("vco_1_level", "<H"),
     ("vco_2_level", "<H"),
     ("multi_level", "<H"),
-    ("cutoff", "<H", "cutoff"),
+    ("cutoff", "<H"),
     ("resonance", "<H"),
     ("cutoff_eg_int", "<H"),
     ("cutoff_drive", "B"),
@@ -146,6 +150,49 @@ patch_struct = (
     #332
     ("str_PRED", "4s")
 )
+
+
+minilogue_og_patch_normalisation = (
+#    ("vco_1_pitch", "vco_1_pitch_b2_9_FF_2", "vco_1_pitch_shape_octave_wave_03_0"),
+)
+
+
+minilogue_og_postnormalisation_deletions = (
+#    "vco_1_pitch_b2_9",
+)
+
+
+def normalise_patch(patch):
+    """Expand all encoded fields into a normalised form of patch object. This makes it
+    printable and easier to translate. Uses the minilogue_og_patch_normalisation
+    translation table:
+    ("vco_1_pitch", "vco_1_pitch_b2_9_FF_2", "vco_1_pitch_shape_octave_wave_03_0"),
+
+    Args:
+        patch (Patch instance): raw minilogue og patch, read using
+            minilogue_og_patch_struct
+
+    Returns:
+        Patch instance: Decoded/expanded patch
+
+    """
+    norm_patch = copy.deepcopy(patch)
+    for t in minilogue_og_patch_normalisation:
+        # t has form ('dest_name', 'src1_name_XX_x', 'src2_name_XX_x', ...)
+        dest_name, *srcs = t
+        dest_val = 0
+        for s in srcs:
+            src_name, mask, shift = decode_src_string(s)
+            source_val = getattr(patch, src_name) & mask
+            dest_val += common.signed_shift(source_val, shift)
+        setattr(norm_patch, dest_name, dest_val)
+
+    # Delete all encoded fields that won't be used anymore
+    for t in minilogue_og_postnormalisation_deletions:
+        delattr(norm_patch, t)
+
+    return norm_patch
+
 
 favorite_template = """\
 <?xml version="1.0" encoding="UTF-8"?>

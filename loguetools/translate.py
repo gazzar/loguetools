@@ -87,7 +87,7 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
 
     """
     input_file = pathlib.Path(filename)
-    assert input_file.suffix in {".mnlgprog", ".mnlgpreset", ".mnlglib", ".syx"}
+    assert input_file.suffix in {".mnlgprog", ".mnlgpreset", ".mnlglib", ".prlgprog", ".prlgpreset", ".prlglib", ".syx"}
 
     if input_file.suffix != ".syx":
         flavor = "xd"
@@ -159,9 +159,14 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
             print(f"{int(p[5:8])+1:03d}: {prgname}")
 
             if input_file.suffix != ".syx":
-                raw_og_patch = common.parse_patchdata(patchdata)
-                patch = og.normalise_og_patch(raw_og_patch)
-                patch_xd, patchdata = convert_og_to_xd(patch)
+                if flavour == 'og': 
+                    raw_og_patch = common.parse_patchdata(patchdata)
+                    patch = og.normalise_og_patch(raw_og_patch)
+                    patch_xd, patchdata = convert_og_to_xd(patch)
+                elif flavor == 'prologue':
+                    raw_og_patch = common.parse_patchdata(patchdata)
+                    patch = prologue.normalise_patch(raw_og_patch)
+                    patch_xd, patchdata = convert_og_to_xd(patch)
 
             # .prog_bin record/file
             xdzip.writestr(f"Prog_{i:03d}.prog_bin", patchdata)

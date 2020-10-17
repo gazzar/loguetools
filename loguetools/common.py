@@ -448,6 +448,9 @@ def parse_patchdata(data):
     if patch.minilogue_type == "xd":
         patch_struct = xd.minilogue_xd_patch_struct
         tuple_decoder = xd.patch_translation_value
+    elif patch.minilogue_type == "prologue":
+        patch_struct = prologue.patch_struct
+        tuple_decoder = prologue.patch_value
     else:
         patch_struct = og.minilogue_og_patch_struct
         tuple_decoder = og.patch_value
