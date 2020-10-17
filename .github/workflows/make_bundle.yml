@@ -29,16 +29,16 @@ jobs:
         if: runner.os == 'Linux'
         with:
           name: loguetools-${{ runner.os }}
-          path: '**/*.AppImage'
+          path: '**/dist/**'
       - name: Upload Artifact for MacOS
         uses: actions/upload-artifact@v2
         if: runner.os == 'MacOS'
         with:
           name: loguetools-${{ runner.os }}
-          path: '**/*.app'
+          path: '**/dist/**'
       - name: Upload Artifact for Windows
         uses: actions/upload-artifact@v2
         if: runner.os == 'Windows'
         with:
           name: loguetools-${{ runner.os }}
-          path: '**/*.exe'
+          path: '**/dist/**'
