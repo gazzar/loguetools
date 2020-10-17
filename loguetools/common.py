@@ -244,6 +244,12 @@ def patch_type(data):
 
     try:
         struct.unpack_from("B", data, offset=447)
+        return "og"
+    except struct.error:
+        pass
+
+    try:
+        struct.unpack_from("B", data, offset=447)
         # if we didn't raise an exception by this point, it's an og or monologue
         hash = hashlib.md5(data).hexdigest()
         if is_init_patch("monologue", hash):
