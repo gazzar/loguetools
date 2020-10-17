@@ -43,7 +43,7 @@ def convert_og_to_xd(patch):
             value = bytes(value, "utf-8")
         struct.pack_into(f.type, binary_xd, offset, value)
         offset += struct.calcsize(f.type)
-
+	
     return patch_xd, binary_xd
 
 
@@ -163,7 +163,7 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
                     raw_og_patch = common.parse_patchdata(patchdata)
                     patch = og.normalise_og_patch(raw_og_patch)
                     patch_xd, patchdata = convert_og_to_xd(patch)
-                elif flavor == 'prologue':
+                elif flavour == 'prologue':
                     raw_og_patch = common.parse_patchdata(patchdata)
                     patch = prologue.normalise_patch(raw_og_patch)
                     patch_xd, patchdata = convert_og_to_xd(patch)

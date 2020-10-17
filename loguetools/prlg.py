@@ -1,4 +1,5 @@
 from collections import namedtuple
+import copy
 
 
 patch_value = namedtuple("Field", ["name", "type"])
@@ -7,7 +8,7 @@ patch_struct = (
     # 0
     ("str_PROG", "4s"),
     ("program_name", "12s"),
-    ("octave", "B"),
+    ("keyboard_octave", "B"),
     ("sub_on", "B"),
     ("edit_timbre", "B"),
     ("timbre_type", "B"),
@@ -57,7 +58,7 @@ patch_struct = (
     ("like_upper", "<H"),
     ("like_lower", "<H"),
     #80 Timbre 1
-    ("portamento", "B"),
+    ("portamento_time", "B"),
     ("reserved6", "B"),
     ("voice_spread", "B"),
     ("reserved7", "B"),
@@ -152,13 +153,28 @@ patch_struct = (
 )
 
 
-minilogue_og_patch_normalisation = (
+patch_normalization = (
 #    ("vco_1_pitch", "vco_1_pitch_b2_9_FF_2", "vco_1_pitch_shape_octave_wave_03_0"),
 )
 
 
-minilogue_og_postnormalisation_deletions = (
-#    "vco_1_pitch_b2_9",
+postnormalization_deletions = (
+    "sub_on",
+    "edit_timbre",
+    "timbre_type",
+    "main_sub_balance",
+    "reserved1",
+    "main_sub_position",
+    "split_point",
+    "arp_target",
+    "reserved2",
+    "category",
+    "frequent_upper",
+    "frequent_lower",
+    "reserved3",
+    "reserved4",
+
+    "timbre_2"
 )
 
 
@@ -177,7 +193,7 @@ def normalise_patch(patch):
 
     """
     norm_patch = copy.deepcopy(patch)
-    for t in minilogue_og_patch_normalisation:
+    for t in patch_normalization:
         # t has form ('dest_name', 'src1_name_XX_x', 'src2_name_XX_x', ...)
         dest_name, *srcs = t
         dest_val = 0
@@ -188,7 +204,7 @@ def normalise_patch(patch):
         setattr(norm_patch, dest_name, dest_val)
 
     # Delete all encoded fields that won't be used anymore
-    for t in minilogue_og_postnormalisation_deletions:
+    for t in postnormalization_deletions:
         delattr(norm_patch, t)
 
     return norm_patch
