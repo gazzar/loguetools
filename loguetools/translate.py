@@ -12,7 +12,7 @@ from loguetools import og, xd, prlg as prologue, common
 XD_PATCH_LENGTH = 1024
 
 
-def convert_og_to_xd(patch):
+def convert_to_xd(patch, flavour):
     """Converts a minilogue og patch to a minilogue xd patch.
 
     Args:
@@ -27,8 +27,8 @@ def convert_og_to_xd(patch):
     binary_xd = bytearray(XD_PATCH_LENGTH)
 
     offset = 0
-    for m in xd.minilogue_xd_patch_struct:
-        f = xd.patch_translation_value(*m)
+    for m in xd.patch_struct[flavour]:
+        f = xd.patch_translation_value[flavour](*m)
         if isinstance(f.source, str):
             value = getattr(patch, f.source)
         elif isinstance(f.source, (int, bytes)):
@@ -162,11 +162,11 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
                 if flavour == 'og': 
                     raw_og_patch = common.parse_patchdata(patchdata)
                     patch = og.normalise_og_patch(raw_og_patch)
-                    patch_xd, patchdata = convert_og_to_xd(patch)
+                    patch_xd, patchdata = convert_to_xd(patch, flavour)
                 elif flavour == 'prologue':
                     raw_og_patch = common.parse_patchdata(patchdata)
                     patch = prologue.normalise_patch(raw_og_patch)
-                    patch_xd, patchdata = convert_og_to_xd(patch)
+                    patch_xd, patchdata = convert_to_xd(patch, flavour)
 
             # .prog_bin record/file
             xdzip.writestr(f"Prog_{i:03d}.prog_bin", patchdata)

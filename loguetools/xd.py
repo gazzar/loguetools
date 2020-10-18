@@ -43,6 +43,13 @@ og_slider_to_xd = {
    28:  2, # VOICE MODE DEPTH
 }
 
+prologue_mod_wheel_to_xd = {
+#todo
+}
+
+prologue_e_pedal_to_xd = {
+#todo
+}
 
 og_motion_to_xd = {
      0:  0,     # None
@@ -99,8 +106,18 @@ fn_slider_left = lambda src: og_slider_to_xd.get(src.slider_assign, 12)
 fn_bend_range_plus = lambda src: int(100 + src.bend_range_plus * 100 / 12)
 fn_bend_range_minus = lambda src: int(100 + src.bend_range_minus * 100 / 12)
 
+fn_midi_after_touch_assign = lambda src: prologue_mod_wheel_to_xd.get(src.midi_after_touch_assign, 0)
+fn_mod_wheel_assign = lambda src: prologue_mod_wheel_to_xd.get(src.mod_wheel_assign, 0)
+fn_e_pedal_assign = lambda src: prologue_e_pedal_to_xd.get(src.e_pedal_assign, 0)
+
 # Simple translation functions
 fn_delay_on_off = lambda src: 0 if src.delay_output_routing == 0 else 1
+fn_prologue_delay_on_off = lambda src: 1 if src.delay_reverb_on_off != 0 and src.delay_reverb_type == 1 else 0
+fn_prologue_reverb_on_off = lambda src: 1 if src.delay_reverb_on_off != 0 and src.delay_reverb_type == 2 else 0
+
+fn_sync = lambda src: 1 if src.ring_sync == 2 else 0
+fn_ring = lambda src: 1 if src.ring_sync == 0 else 0
+
 fn_str_pred = lambda src: "PRED"
 fn_str_sq = lambda src: "SQ"
 # XD swing encoding is 0,75,150=-75%,0,+75% but OG uses something else; maybe 2's complement?
@@ -109,8 +126,15 @@ fn_cutoff_velocity = lambda src: (0, 63, 127)[src.cutoff_velocity]
 fn_cutoff_kbd_track = lambda src: 2 - src.cutoff_kbd_track
 fn_multi_octave = lambda src: 0 if src.vco_1_octave == 0 else src.vco_1_octave - 1
 fn_voice_mode_type = lambda src: {0: 4, 1: 4, 2: 3, 3: 2, 4: 2, 5: 4, 6: 1, 7: 4}[src.voice_mode]
+fn_prologue_voice_mode_type = lambda src: {0: 4, 1: 4, 2: 3, 3: 2}[src.voice_mode_type] if src.arp == 0 else 1
+fn_prologue_voice_mode_depth = lambda src: {0: 0, 1: 157, 2: 313, 3: 469, 4:781, 5: 1023}[src.voice_mode_depth] if src.arp != 0 else src.voice_mode_depth
+# Assumption: pitch EG is favored over cutoff eg
+fn_prologue_eg_int = lambda src: src.pitch_eg_int if src.pitch_eg_int > 0 else src.cutoff_eg_int
+fn_prologue_eg_target = lambda src: 2 if src.pitch_eg_int > 0 else 0
+
 # The following seems wrong; need more data
 fn_delay_time = lambda src: int(src.delay_time * 350.0 / 654.0)
+fn_bmp = lambda src: 300 if src.bpm > 300 else src
 
 # Based on the SonicLabs review, the minilogue's portamento time setting encodes both
 # the portamento time and the EG Legato setting. The OG midi docs say
@@ -173,6 +197,7 @@ def fn_translate_step_data(og_step_data):
     xd_buffer[45:47] = og_step_data[18:20]
     return xd_buffer
 
+fn_empty_step_data = lambda src: bytearray(52 * b"\x00")
 
 fn_step_01_event_data = lambda src: fn_translate_step_data(src.step_01_event_data)
 fn_step_02_event_data = lambda src: fn_translate_step_data(src.step_02_event_data)
@@ -414,7 +439,8 @@ the forms
 ('label', 'binary-format string', f), where f is a function
 
 """
-minilogue_xd_patch_struct = (
+patch_struct = {
+    "og":(
     # 0
     ("str_PROG", "4s", "str_PROG"),
     ("program_name", "12s", "program_name"),
@@ -569,10 +595,165 @@ minilogue_xd_patch_struct = (
     # 1022
     ("arp_gate_time", "B", "default_gate_time"),
     ("arp_rate", "B", 5),   # **
-)
 # ** Seems to be off by 1 in Korg's docs; set to 5 to get 16th notes.
 # Minilogue arp only plays 16th notes unless you halve the tempo?
-
+    ),
+    "prologue":(
+    ("str_PROG", "4s", "str_PROG"),
+    ("program_name", "12s", "program_name"),
+    ("octave", "B", "keyboard_octave"),
+    ("portamento", "B", "portamento_time"),
+    ("key_trig", "B", 0),
+    ("voice_mode_depth", "<H", fn_prologue_voice_mode_depth),
+    ("voice_mode_type", "B", fn_prologue_voice_mode_type),
+    ("vco_1_wave", "B", "vco_1_wave"),
+    ("vco_1_octave", "B", "vco_1_octave"),
+    ("vco_1_pitch", "<H", "vco_1_pitch"),
+    ("vco_1_shape", "<H", "vco_1_shape"),
+    ("vco_2_wave", "B", "vco_2_wave"),
+    ("vco_2_octave", "B", "vco_2_octave"),
+    ("vco_2_pitch", "<H", "vco_2_pitch"),
+    ("vco_2_shape", "<H", "vco_2_shape"),
+    ("sync", "B", fn_sync),
+    ("ring", "B", fn_ring),
+    ("cross_mod_depth", "<H", "cross_mod_depth"),
+    ("multi_type", "B", "multi_type"),
+    ("select_noise", "B", "select_noise"),
+    ("select_vpm", "B", "select_vpm"),
+    ("select_user", "B", "select_user"),
+    ("shape_noise", "<H", "shape_noise"),
+    ("shape_vpm", "<H", "shape_vpm"),
+    ("shape_user", "<H", "shape_user"),
+    ("shift_shape_noise", "<H", 0),
+    # 50
+    ("shift_shape_vpm", "<H", "shift_shape_vpm"),
+    ("shift_shape_user", "<H", "shift_shape_user"),
+    ("vco_1_level", "<H", "vco_1_level"),
+    ("vco_2_level", "<H", "vco_2_level"),
+    ("multi_level", "<H", "multi_level"),
+    ("cutoff", "<H", "cutoff"),
+    ("resonance", "<H", "resonance"),
+    ("cutoff_drive", "B", "cutoff_drive"),
+    ("cutoff_keyboard_track", "B", "cutoff_keyboard_track"),
+    ("amp_eg_attack", "<H", "amp_eg_attack"),
+    ("amp_eg_decay", "<H", "amp_eg_decay"),
+    ("amp_eg_sustain", "<H", "amp_eg_sustain"),
+    ("amp_eg_release", "<H", "amp_eg_release"),
+    ("eg_attack", "<H", "eg_attack"),
+    ("eg_decay", "<H", "eg_decay"),
+    ("eg_int", "<H", fn_prologue_eg_int),
+    ("eg_target", "B", fn_prologue_eg_target),
+    ("lfo_wave", "B", "lfo_wave"),
+    ("lfo_mode", "B", "lfo_mode"),
+    ("lfo_rate", "<H", "lfo_rate"),
+    ("lfo_int", "<H", "lfo_int"),
+    ("lfo_target", "B", "lfo_target"),
+    ("mod_fx_on_off", "B", "mod_fx_on_off"),
+    ("mod_fx_type", "B", "mod_fx_type"),
+    ("mod_fx_chorus", "B", "mod_fx_chorus"),
+    ("mod_fx_ensemble", "B", "mod_fx_ensemble"),
+    ("mod_fx_phaser", "B", "mod_fx_phaser"),
+    ("mod_fx_flanger", "B", "mod_fx_flanger"),
+    ("mod_fx_user", "B", "mod_fx_user"),
+    ("mod_fx_time", "<H", "mod_fx_time"),
+    ("mod_fx_depth", "<H", "mod_fx_depth"),
+    ("delay_on_off", "B", fn_prologue_delay_on_off),
+    # 100
+    ("delay_sub_type", "B", "delay_sub_type"),
+    ("delay_time", "<H", "delay_reverb_time"),
+    ("delay_depth", "<H", "delay_reverb_depth"),
+    ("reverb_on_off", "B", fn_prologue_reverb_on_off),
+    ("reverb_sub_type", "B", "reverb_sub_type"),
+    ("reverb_time", "<H", "delay_reverb_time"),
+    ("reverb_depth", "<H", "delay_reverb_depth"),
+    ("bend_range_plus", "B", "bend_range_plus"),
+    ("bend_range_minus", "B", "bend_range_minus"),
+    ("joystick_assign_plus", "B", fn_mod_wheel_assign),
+    ("joystick_range_plus", "B", 200),
+    ("joystick_assign_minus", "B", fn_e_pedal_assign),
+    ("joystick_range_minus", "B", 200),
+    ("cv_in_mode", "B", 0),
+    ("cv_in_1_assign", "B", 0),
+    ("cv_in_1_range", "B", 100),
+    ("cv_in_2_assign", "B", 0),
+    ("cv_in_2_range", "B", 100),
+    ("micro_tuning", "B", "micro_tuning"),
+    ("scale_key", "B", "scale_key"),
+    ("program_tuning", "B", "program_tuning"),
+    ("lfo_key_sync", "B", "lfo_key_sync"),
+    ("lfo_voice_sync", "B", "lfo_voice_sync"),
+    ("lfo_target_osc", "B", "lfo_target_osc"),
+    ("cutoff_velocity", "B", "cutoff_velocity"),
+    ("amp_velocity", "B", "amp_velocity"),
+    ("multi_octave", "B", "multi_octave"),
+    ("multi_routing", "B", "multi_routing"),
+    ("eg_legato", "B", "eg_legato"),
+    ("portamento_mode", "B", "portamento_mode"),
+    ("portamento_bpm_sync", "B", 0),
+    ("program_level", "B", "program_level"),
+    ("vpm_param1_feedback", "B", "vpm_param1_feedback"),
+    ("vpm_param2_noise_depth", "B", "vpm_param2_noise_depth"),
+    ("vpm_param3_shapemodint", "B", "vpm_param3_shapemodint"),
+    ("vpm_param4_mod_attack", "B", "vpm_param4_mod_attack"),
+    ("vpm_param5_mod_decay", "B", "vpm_param5_mod_decay"),
+    ("vpm_param6_modkeytrack", "B", "vpm_param6_modkeytrack"),
+    ("user_param1", "B", "user_param1"),
+    ("user_param2", "B", "user_param2"),
+    ("user_param3", "B", "user_param3"),
+    ("user_param4", "B", "user_param4"),
+    ("user_param5", "B", "user_param5"),
+    ("user_param6", "B", "user_param6"),
+    ("user_param1_2_3_4_type", "B", "user_param1_2_3_4_type"),
+    ("user_param1_2_3_4_type", "B", "user_param1_2_3_4_type"),
+    # 150
+    ("program_transpose", "B", "program_transpose"),
+    ("delay_dry_wet", "<H", "delay_reverb_dry_wet"),  # 50% wet/dry
+    ("reverb_dry_wet", "<H", "delay_reverb_dry_wet"),  # 50% wet/dry
+    ("midi_after_touch_assign", "B", fn_midi_after_touch_assign),
+    ("str_PRED", "4s", fn_str_pred),
+    ("str_SQ", "2s", fn_str_sq),
+    ("step_1_16_active_step", "<H", 0),
+    ("bpm", "<H", fn_bmp),
+    ("step_length", "B", 0),
+    ("step_resolution", "B", 0),
+    ("swing", "B", 0),
+    ("default_gate_time", "B", 0),
+    ("step1_16", "<H", 0),
+    ("step1_16_motion", "<H", 0),
+    ("motion_slot_1_0_parameter", "B", 0),
+    ("motion_slot_1_1_parameter", "B", 0),
+    ("motion_slot_2_0_parameter", "B", 0),
+    ("motion_slot_2_1_parameter", "B", 0),
+    ("motion_slot_3_0_parameter", "B", 0),
+    ("motion_slot_3_1_parameter", "B", 0),
+    ("motion_slot_4_0_parameter", "B", 0),
+    ("motion_slot_4_1_parameter", "B", 0),
+    ("motion_slot_1_step1_16", "<H", 0),
+    ("motion_slot_2_step1_16", "<H", 0),
+    ("motion_slot_3_step1_16", "<H", 0),
+    ("motion_slot_4_step1_16", "<H", 0),
+    # 1900
+    ("step_01_event_data", "52s", fn_empty_step_data),
+    ("step_02_event_data", "52s", fn_empty_step_data),
+    ("step_03_event_data", "52s", fn_empty_step_data),
+    ("step_04_event_data", "52s", fn_empty_step_data),
+    ("step_05_event_data", "52s", fn_empty_step_data),
+    ("step_06_event_data", "52s", fn_empty_step_data),
+    ("step_07_event_data", "52s", fn_empty_step_data),
+    ("step_08_event_data", "52s", fn_empty_step_data),
+    ("step_09_event_data", "52s", fn_empty_step_data),
+    ("step_10_event_data", "52s", fn_empty_step_data),
+    ("step_11_event_data", "52s", fn_empty_step_data),
+    ("step_12_event_data", "52s", fn_empty_step_data),
+    ("step_13_event_data", "52s", fn_empty_step_data),
+    ("step_14_event_data", "52s", fn_empty_step_data),
+    ("step_15_event_data", "52s", fn_empty_step_data),
+    ("step_16_event_data", "52s", fn_empty_step_data),
+    # 1022
+    ("arp_gate_time", "B", 0),
+    ("arp_rate", "B", "arp_rate"),   # **
+    )
+}
 
 favorite_template = """\
 <?xml version="1.0" encoding="UTF-8"?>
