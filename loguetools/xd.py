@@ -194,14 +194,15 @@ fn_cutoff_kbd_track = lambda src: 2 - src.cutoff_kbd_track
 fn_multi_octave = lambda src: 0 if src.vco_1_octave == 0 else src.vco_1_octave - 1
 fn_voice_mode_type = lambda src: {0: 4, 1: 4, 2: 3, 3: 2, 4: 2, 5: 4, 6: 1, 7: 4}[src.voice_mode]
 fn_prologue_voice_mode_type = lambda src: {0: 4, 1: 4, 2: 3, 3: 2}[src.voice_mode_type] if src.arp == 0 else 1
-fn_prologue_voice_mode_depth = lambda src: {0: 0, 1: 157, 2: 313, 3: 469, 4:781, 5: 1023}[src.voice_mode_depth] if src.arp != 0 else src.voice_mode_depth
+fn_prologue_voice_mode_depth = lambda src: {0: 0, 1: 157, 2: 313, 3: 469, 4:781, 5: 1023}[src.arp_type] if src.arp != 0 else src.voice_mode_depth
 # Assumption: pitch EG is favored over cutoff eg
 fn_prologue_eg_int = lambda src: src.pitch_eg_int if src.pitch_eg_int > 0 else src.cutoff_eg_int
 fn_prologue_eg_target = lambda src: 2 if src.pitch_eg_int > 0 else 0
+fn_prologue_lfo_mode = lambda src: {0: 3, 1: 1, 2: 1}[src.lfo_mode]
 
 # The following seems wrong; need more data
 fn_delay_time = lambda src: int(src.delay_time * 350.0 / 654.0)
-fn_bmp = lambda src: 300 if src.bpm > 300 else src
+fn_bmp = lambda src: 3000 if src.bpm > 3000 else src
 
 # Based on the SonicLabs review, the minilogue's portamento time setting encodes both
 # the portamento time and the EG Legato setting. The OG midi docs say
@@ -711,7 +712,7 @@ patch_struct = {
     ("eg_int", "<H", fn_prologue_eg_int),
     ("eg_target", "B", fn_prologue_eg_target),
     ("lfo_wave", "B", "lfo_wave"),
-    ("lfo_mode", "B", "lfo_mode"),
+    ("lfo_mode", "B", fn_prologue_lfo_mode),
     ("lfo_rate", "<H", "lfo_rate"),
     ("lfo_int", "<H", "lfo_int"),
     ("lfo_target", "B", "lfo_target"),
@@ -780,7 +781,8 @@ patch_struct = {
     ("str_PRED", "4s", fn_str_pred),
     ("str_SQ", "2s", fn_str_sq),
     ("step_1_16_active_step", "<H", 0),
-    ("bpm", "<H", fn_bmp),
+#    ("bpm", "<H", fn_bmp),
+    ("bpm", "<H", "bpm"),
     ("step_length", "B", 0),
     ("step_resolution", "B", 0),
     ("swing", "B", 0),

@@ -4,6 +4,7 @@ import copy
 
 patch_value = namedtuple("Field", ["name", "type"])
 
+
 patch_struct = (
     # 0
     ("str_PROG", "4s"),
@@ -22,7 +23,7 @@ patch_struct = (
     ("category", "B"),
     ("frequent_upper", "<H"),
     ("frequent_lower", "<H"),
-    ("reserved3", "B"),
+    ("reserved3", "3B"),
     ("amp_velocity", "B"),
     ("portamento_mode", "B"),
     ("reserved4", "B"),

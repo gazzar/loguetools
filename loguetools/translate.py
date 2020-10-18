@@ -136,7 +136,7 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
     copyright = None
     author = None
     comment = None
-    if input_file.suffix == ".mnlgpreset":
+    if input_file.suffix in {".mnlgxdpreset", ".mnlgpreset", ".prlgpreset", ".molgpreset"}:
         dataid, name, author, version, numofprog, date, prefix, copyright = common.all_from_presetinformation_xml(zipobj)
         if dataid is None:
           dataid = name
