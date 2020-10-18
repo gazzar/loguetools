@@ -41,14 +41,81 @@ og_slider_to_xd = {
    26: 28, # DELAY FEEDBACK
    27:  1, # Portament Time
    28:  2, # VOICE MODE DEPTH
+   77: 12, # PITCH BEND alt.
+   78:  0, # GATE TIME alt.
 }
 
 prologue_mod_wheel_to_xd = {
-#todo
+#    0 : # BALANCE
+    1 : 1, # PORTAMENTO
+#    2 : # V.SPREAD
+    3 : 2, # V.M DEPTH
+    4 : 3, # VCO1 PITCH
+    5 : 4, # VCO1 SHAPE
+    6 : 5, # VCO2 PITCH
+    7 : 6, # VCO2 SHAPE
+    8 : 7, # CROSS MOD
+    9 : 20, # PITCH EG INT -> EG INT
+    10 : 8, # MULTI SHAPE
+    11 : 9, # VCO1 LEVEL
+    12 : 10, # VCO2 LEVEL
+    13 : 11, # MULTI LEVEL
+    14 : 12, # CUTOFF
+    15 : 13, # RESONANCE
+    16 : 20, # CUTOFF EG INT -> EG INT
+    17 : 14, # A.EG ATTACK
+    18 : 15, # A.EG DECAY
+    19 : 16, # A.EG SUSTAIN
+    20 : 17, # A.EG RELEASE
+    21 : 18, # EG ATTACK
+    22 : 19, # EG DECAY
+#    23 : # EG SUSTAIN
+#    24 : # EG RELEASE
+    25 : 21, # LFO RATE
+    26 : 22, # LFO INT
+    27 : 23, # MOD FX SPEED
+    28 : 24, # MOD FX DEPTH
+#todo: change with the patch default delay/reverb fx
+    29 : 27, # DL/RV TIME -> DELAY TIME
+    30 : 28, # DL/RV DEPTH -> DELAY DEPTH
+    31 : 0, # GATE TIME
 }
 
 prologue_e_pedal_to_xd = {
-#todo
+#    0 : # OFF
+#    1 : # VOLUME
+#    2 : # BALANCE
+    3 : 1, # PORTAMENTO
+#    4 : # V.SPREAD
+    5 : 2, # V.M DEPTH
+    6 : 3, # VCO1 PITCH
+    7 : 4, # VCO1 SHAPE
+    8 : 5, # VCO2 PITCH
+    9 : 6, # VCO2 SHAPE
+    10 : 7, # CROSS MOD
+    11 : 20, # PITCH EG INT -> EG INT
+    12 : 8, # MULTI SHAPE
+    13 : 9, # VCO1 LEVEL
+    14 : 10, # VCO2 LEVEL
+    15 : 11, # MULTI LEVEL
+    16 : 12, # CUTOFF
+    17 : 13, # RESONANCE
+    18 : 20, # CUTOFF EG INT
+    19 : 14, # A.EG ATTACK
+    20 : 15, # A.EG DECAY
+    21 : 16, # A.EG SUSTAIN
+    22 : 17, # A.EG RELEASE
+    23 : 18, # EG ATTACK
+    24 : 19, # EG DECAY
+#    25 : # EG SUSTAIN
+#    26 : # EG RELEASE
+    27 : 21, # LFO RATE
+    28 : 22, # LFO INT
+    29 : 23, # MOD FX SPEED
+    30 : 24, # MOD FX DEPTH
+#todo: change with the patch default delay/reverb fx
+    31 : 27, # DL/RV TIME
+    32 : 28, # DL/RV DEPTH
 }
 
 og_motion_to_xd = {
