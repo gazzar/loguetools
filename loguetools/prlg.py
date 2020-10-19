@@ -1,5 +1,4 @@
 from collections import namedtuple
-import copy
 
 
 patch_value = namedtuple("Field", ["name", "type"])
@@ -156,61 +155,7 @@ patch_struct = (
 )
 
 
-patch_normalization = (
-#    ("vco_1_pitch", "vco_1_pitch_b2_9_FF_2", "vco_1_pitch_shape_octave_wave_03_0"),
-)
-
-
-postnormalization_deletions = (
-    "sub_on",
-    "edit_timbre",
-    "timbre_type",
-    "main_sub_balance",
-    "reserved1",
-    "main_sub_position",
-    "split_point",
-    "arp_target",
-    "reserved2",
-    "category",
-    "frequent_upper",
-    "frequent_lower",
-    "reserved3",
-    "reserved4",
-
-    "timbre_2"
-)
-
-
-def normalise_patch(patch):
-    """Expand all encoded fields into a normalised form of patch object. This makes it
-    printable and easier to translate. Uses the minilogue_og_patch_normalisation
-    translation table:
-    ("vco_1_pitch", "vco_1_pitch_b2_9_FF_2", "vco_1_pitch_shape_octave_wave_03_0"),
-
-    Args:
-        patch (Patch instance): raw minilogue og patch, read using
-            minilogue_og_patch_struct
-
-    Returns:
-        Patch instance: Decoded/expanded patch
-
-    """
-    norm_patch = copy.deepcopy(patch)
-    for t in patch_normalization:
-        # t has form ('dest_name', 'src1_name_XX_x', 'src2_name_XX_x', ...)
-        dest_name, *srcs = t
-        dest_val = 0
-        for s in srcs:
-            src_name, mask, shift = decode_src_string(s)
-            source_val = getattr(patch, src_name) & mask
-            dest_val += common.signed_shift(source_val, shift)
-        setattr(norm_patch, dest_name, dest_val)
-
-    # Delete all encoded fields that won't be used anymore
-    for t in postnormalization_deletions:
-        delattr(norm_patch, t)
-
-    return norm_patch
+normalise_patch = lambda a: a
 
 
 favorite_template = """\
