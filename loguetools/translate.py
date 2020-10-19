@@ -6,7 +6,7 @@ import struct
 from pprint import pprint
 import pathlib
 import re
-from loguetools import og, xd, prlg as prologue, common
+from loguetools import og, xd, prlg as prologue, molg, common
 
 
 XD_PATCH_LENGTH = 1024
@@ -87,7 +87,7 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
 
     """
     input_file = pathlib.Path(filename)
-    assert input_file.suffix in {".mnlgprog", ".mnlgpreset", ".mnlglib", ".prlgprog", ".prlgpreset", ".prlglib", ".syx"}
+    assert input_file.suffix in {".mnlgprog", ".mnlgpreset", ".mnlglib", ".prlgprog", ".prlgpreset", ".prlglib", ".molgprog", ".molgpreset", ".molglib", ".syx"}
 
     if input_file.suffix != ".syx":
         flavor = "xd"
@@ -166,6 +166,10 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
                 elif flavour == 'prologue':
                     raw_og_patch = common.parse_patchdata(patchdata)
                     patch = prologue.normalise_patch(raw_og_patch)
+                    patch_xd, patchdata = convert_to_xd(patch, flavour)
+                elif flavour == 'molg':
+                    raw_og_patch = common.parse_patchdata(patchdata)
+                    patch = molg.normalise_patch(raw_og_patch)
                     patch_xd, patchdata = convert_to_xd(patch, flavour)
 
             # .prog_bin record/file

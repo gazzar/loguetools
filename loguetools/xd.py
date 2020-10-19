@@ -118,6 +118,25 @@ prologue_e_pedal_to_xd = {
     32 : 28, # DL/RV DEPTH
 }
 
+molg_slider_to_xd = {
+    13:  3, # VCO 1 PITCH
+    14:  4, # VCO 1 SHAPE
+    17:  5, # VCO 2 PITCH
+    18:  6, # VCO 2 SHAPE
+    21:  9, # VCO 1 LEVEL
+    22: 10, # VCO 2 LEVEL
+    23: 12, # CUTOFF
+    24: 13, # RESONANCE
+    26: 50, # EG ATTACK
+    27: 51, # EG DECAY
+    28: 20, # EG INT
+    31: 21, # LFO RATE
+    32: 22, # LFO INT
+    40:  1, # Portament Time
+    56: 12, # PITCH BEND. This is taken care of by +/-x on the xd so I default to filter EG.
+    57:  0, # GATE TIME
+}
+
 og_motion_to_xd = {
      0:  0,     # None
     17: 20,     # VCO 1 PITCH
@@ -160,6 +179,37 @@ og_motion_to_xd = {
     57: 71,     # DELAY FEEDBACK
     61: 126,     # PITCH BEND
     62: 129,     # GATE TIME
+}
+
+molg_motion_to_xd = {
+     0:  0,     # None
+    13: 20,     # VCO 1 PITCH
+    14: 21,     # VCO 1 SHAPE
+    15: 18,     # : 19? VCO 1 OCTAVE **og WAVE maybe
+    16: 19,     # : 18? VCO 1 OCTAVE **one of these might be WAVE
+    17: 24,     # VCO 2 PITCH
+    18: 25,     # VCO 2 SHAPE  *docs say VCO 1
+    19: 22,     # : 23? VCO 1 OCTAVE *docs say VCO 1
+    20: 23,     # : 22? VCO 1 OCTAVE *docs say VCO 1
+    21: 39,     # VCO 1 LEVEL
+    22: 40,     # VCO 2 LEVEL
+    23: 42,     # CUTOFF
+    24: 43,     # RESONANCE
+    25: 26,     # SYNC
+#    25: 27,     # RING
+    26: 50,     # EG ATTACK
+    27: 51,     # EG DECAY
+    28: 52,     # EG INT
+    29:  0,     #EG TYPE
+    30: 53,      #EG TARGET
+    31: 56,     # LFO RATE
+    32: 57,     # LFO INT
+    33: 58,     # LFO TARGET
+    34: 57,     # LFO EG
+    35: 54,     # LFO TYPE
+    37:  0,     # DRIVE
+    56: 126,     # PITCH BEND
+    57: 129,     # GATE TIME
 }
 
 
@@ -821,6 +871,9 @@ patch_struct = {
     # 1022
     ("arp_gate_time", "B", 0),
     ("arp_rate", "B", "arp_rate"),   # **
+    ),
+    "molg":(
+    ("str_PROG", "4s", "str_PROG"),
     )
 }
 

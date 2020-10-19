@@ -3,7 +3,7 @@ from xml.dom import minidom
 import struct
 from types import SimpleNamespace
 import fnmatch
-from loguetools import og, xd, prlg as prologue
+from loguetools import og, xd, prlg as prologue, molg
 import version
 import re
 import textwrap
@@ -451,6 +451,9 @@ def parse_patchdata(data):
     elif patch.minilogue_type == "prologue":
         patch_struct = prologue.patch_struct
         tuple_decoder = prologue.patch_value
+    elif patch.minilogue_type == "molg":
+        patch_struct = molg.patch_struct
+        tuple_decoder = molg.patch_value
     else:
         patch_struct = og.minilogue_og_patch_struct
         tuple_decoder = og.patch_value
