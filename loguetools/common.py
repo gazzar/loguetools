@@ -77,10 +77,10 @@ def is_init_program_name(name):
 
 
 flavour_to_product = {
-        "xd":"xd",
-        "og":"minilogue",
-        "prologue":"prologue",
-        "monologue":"monologue",
+        "xd": "xd",
+        "og": "minilogue",
+        "prologue": "prologue",
+        "monologue": "monologue",
         "kk": "KingKORG",
     }
 
