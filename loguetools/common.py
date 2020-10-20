@@ -4,7 +4,8 @@ import struct
 from types import SimpleNamespace
 import fnmatch
 from loguetools import og, xd
-import version
+from loguetools import version
+import hashlib
 import re
 import textwrap
 
@@ -48,6 +49,8 @@ init_program_hashes = {
     'og2': '3c2611b06c1fbb118269a0d9ca764b34',
     'xd': 'fd6940f683f8b69966fc3fd08bbb5ee3',
     'prologue': 'a4fa5be24cb09c35a91e81ef2bbf71af',
+    'monologue': '7863e5bf4a351456155b549c24eca178',
+    'kk': 'c2f4605587c157c52c41c9fac56fc5d3',
 }
 def is_init_patch(flavour, hash):
     """True iff the hash matches the Init Program md5 checksum for the corresponding flavour
@@ -60,6 +63,8 @@ def is_init_patch(flavour, hash):
         bool: True iff Init Program matched
 
     """
+    assert flavour in valid_flavours
+
     if flavour == "og":
         return hash in {init_program_hashes["og1"], init_program_hashes["og2"]}
     else:
@@ -70,10 +75,13 @@ def is_init_program_name(name):
     return name.replace(' ', '').strip() == "InitProgram"
 
 
+valid_flavours = {"xd", "og", "prologue", "monologue", "kk"}
 flavour_to_product = {
-        "xd":"xd",
-        "og":"minilogue",
-        "prologue":"prologue"
+        "xd": "xd",
+        "og": "minilogue",
+        "prologue": "prologue",
+        "monologue": "monologue",
+        "kk": "KingKORG",
     }
 
 
@@ -81,8 +89,7 @@ def prog_info_template_xml(flavour, programmer=None, comment=None, copyright=Non
     """xml template for Prog_nnn.prog_info xml patch elements
 
     Args:
-        flavour: "xd", "og", "prologue"
-            choose "xd", "minilogue", "prologue"
+        flavour: "xd", "og", "prologue", "monologue", "kk"
         programmer (str), default=None :  programmer field text
         comment (str), default=None : comment field text
         copyright (str), default=None : copyright field text
@@ -91,6 +98,8 @@ def prog_info_template_xml(flavour, programmer=None, comment=None, copyright=Non
         str: formatted xml
 
     """
+    assert flavour in valid_flavours
+
     # create the file structure
     root = ET.Element(flavour_to_product[flavour] + "_ProgramInformation")
     programmer_elem = ET.SubElement(root, "Programmer")
@@ -115,20 +124,24 @@ def fileinfo_xml(flavour, non_init_patch_ids):
     """Build FileInformation.xml metadata file.
 
     Args:
-        flavour: 
+        flavour: "xd", "og", "prologue", "monologue", "kk"
         non_init_patch_ids (list of ints): 0-based list of non-Init-Program patches
 
     Returns:
         str: formatted xml
 
     """
+    assert flavour in valid_flavours
+
     # create the file structure
     root = ET.Element("KorgMSLibrarian_Data")
     product = ET.SubElement(root, "Product")
     product.text = {
         "xd":"minilogue xd",
         "og":"minilogue",
-        "prologue":"prologue"
+        "prologue":"prologue",
+        "monologue":"monologue",
+        "kk":"KingKORG",
     }[flavour]
     contents = ET.SubElement(root, "Contents")
 
@@ -160,38 +173,45 @@ def fileinfo_xml(flavour, non_init_patch_ids):
     return formatted_xml
 
 
-patch_suffixes = {
-    ".mnlgxdprog", ".mnlgprog", ".prlgprog"
-}
-lib_suffixes = {
-    ".mnlgxdpreset", ".mnlgpreset", ".prlgpreset",
-    ".mnlgxdlib", ".mnlglib", ".prlglib"
-}
+presuffixes = [".mnlgxd", ".mnlg", ".prlg", ".molg", ".kk"]
+patch_suffixes = {i + "prog" for i in presuffixes}
+lib_suffixes = {i + "lib" for i in presuffixes}
+preset_suffixes = {i + "preset" for i in presuffixes}
+collection_suffixes = lib_suffixes | preset_suffixes
+all_suffixes = collection_suffixes | patch_suffixes
 
+postsuffixes = ["prog", "lib", "preset"]
+xd_suffixes = {".mnlgxd" + i for i in postsuffixes}
+og_suffixes = {".mnlg" + i for i in postsuffixes}
+prologue_suffixes = {".prlg" + i for i in postsuffixes}
+monologue_suffixes = {".molg" + i for i in postsuffixes}
+kk_suffixes = {".kk" + i for i in postsuffixes}
+suffixes_dict = {
+        "xd":xd_suffixes,
+        "og":og_suffixes,
+        "prologue":prologue_suffixes,
+        "monologue":monologue_suffixes,
+        "kk":kk_suffixes,
+    }
 
 def file_type(suffix):
     """Identify file data as being a minilogue xd, minilogue og, or prologue patch by
     suffix and whether it is a single patch or collection.
 
     Args:
-        suffix (str): One of
-            ".mnlgxdprog", ".mnlgprog", ".prlgprog"
-            ".mnlgxdpreset", ".mnlgpreset", ".prlgpreset",
-            ".mnlgxdlib", ".mnlglib", ".prlglib"
+        suffix (str): e.g. ".mnlgxdprog", ".mnlgprog", ".prlgpreset", ".molglib"
     Returns:
-        str: One of {"xd", "og", "prologue"}
+        str: One of {"xd", "og", "prologue", "monologue", "kk"}
         bool: True iff suffix is a collection
 
     """
-    assert suffix in lib_suffixes | patch_suffixes
+    assert suffix in all_suffixes
     logue_type = None
-    if suffix in {".mnlgxdpreset", ".mnlgxdlib", ".mnlgxdprog"}:
-        logue_type = "xd"
-    if suffix in {".mnlgpreset", ".mnlglib", ".mnlgprog"}:
-        logue_type = "og"
-    if suffix in {".prlgpreset", ".prlglib", ".prlgprog"}:
-        logue_type = "prologue"
-    if suffix in lib_suffixes:
+    for i in suffixes_dict:
+        if suffix in suffixes_dict[i]:
+            logue_type = i
+
+    if suffix in collection_suffixes:
         collection = True
     else:
         collection = False
@@ -199,15 +219,21 @@ def file_type(suffix):
 
 
 def patch_type(data):
-    """Identify patch data as being a minilogue xd, minilogue og, or prologue patch by
-    attempting to read from locations valid only for the prologue, then if that fails,
-    the xd. xd, og, and Prologue patches are 1780, 448, and 336 bytes long
+    """Identify patch data flavour.
+    Attempts to distinguish by using a combination of approaches:
+    1. Read from locations valid only for some synth flavours.
+       xd, og, monologue, prologue, and kingkorg patches are respectively
+       1024, 448, 448, 336, 320 bytes long.
+    2. Init Program patches are incorrectly initialised on the monologue and contain
+       SEQD at 96~99. Check for this case based on hash.
+    3. To distinguish between og and monologue, look for the SEQD string at the
+       following locations; og: 96~99, monologue: 48~51
 
     Args:
         data (packed binary string): patch data
 
     Returns:
-        str: One of {"xd", "og", "prologue"}
+        str: One of {"xd", "og", "monologue", "prologue", "kk"}
 
     """
     try:
@@ -223,8 +249,28 @@ def patch_type(data):
         pass
 
     try:
+        struct.unpack_from("B", data, offset=447)
+        # if we didn't raise an exception by this point, it's an og or monologue
+        hash = hashlib.md5(data).hexdigest()
+        if is_init_patch("monologue", hash):
+            # An incorrectly initialised monologue Init Program patch
+            return "monologue"
+        if struct.unpack_from("4s", data, offset=48)[0] == b"SEQD":
+            return "monologue"
+        if struct.unpack_from("4s", data, offset=96)[0] == b"SEQD":
+            return "og"
+    except struct.error:
+        pass
+
+    try:
         struct.unpack_from("B", data, offset=335)
         return "prologue"
+    except struct.error:
+        pass
+
+    try:
+        struct.unpack_from("B", data, offset=319)
+        return "kk"
     except struct.error:
         pass
 
@@ -246,7 +292,8 @@ def id_from_name(zipobj, name):
     """
     for i, p in enumerate(zipread_progbins(zipobj)):
         patchdata = zipobj.read(p)
-        prgname = program_name(patchdata)
+        flavour = patch_type(patchdata)
+        prgname = program_name(patchdata, flavour)
         if prgname != name:
             continue
         ident = i + 1
@@ -322,17 +369,24 @@ def author_copyright_from_presetinformation_xml(zipobj):
     return author, copyright
 
 
-def program_name(data):
+def program_name(data, flavour):
     """Returns the patch name
 
     Args:
         data (packed binary string): patch data
+        flavour: "xd", "og", "prologue", "monologue", "kk"
 
     Returns:
         str: name
 
     """
-    name = struct.unpack_from("12s", data, offset=4)[0].decode("utf-8").strip("\x00")
+    assert flavour in valid_flavours
+
+    if flavour == "kk":
+        offset = 0
+    else:
+        offset = 4
+    name = struct.unpack_from("12s", data, offset)[0].decode("utf-8").partition("\x00")[0].strip("\x00")
     return name
 
 

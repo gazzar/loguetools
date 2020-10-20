@@ -1,5 +1,5 @@
 import loguetools.common as common
-import version
+import loguetools.version as version
 from pathlib import Path
 
 

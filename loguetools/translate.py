@@ -93,11 +93,11 @@ def translate(filename, match_name, match_ident, verbose, unskip_init):
     with ZipFile(output_file, "w") as xdzip:
         for i, p in enumerate(proglist):
             patchdata = zipobj.read(p)
-            prgname = common.program_name(patchdata)
             flavour = common.patch_type(patchdata)
             if common.is_init_patch(flavour, hash):
                 # Init Program identified based on hash; i.e. a "True" Init Program
                 continue
+            prgname = common.program_name(patchdata, flavour)
             if common.is_init_program_name(prgname) and not unskip_init:
                 # Init Program found and option not to skip is unchecked
                 continue
