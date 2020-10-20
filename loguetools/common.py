@@ -3,8 +3,9 @@ from xml.dom import minidom
 import struct
 from types import SimpleNamespace
 import fnmatch
-from loguetools import og, xd, prlg as prologue, molg
-import version
+from loguetools import og, xd, prologue, monologue
+from loguetools import version
+import hashlib
 import re
 import textwrap
 
@@ -48,7 +49,9 @@ init_program_hashes = {
     'og2': '3c2611b06c1fbb118269a0d9ca764b34',
     'xd': 'fd6940f683f8b69966fc3fd08bbb5ee3',
     'prologue': 'a4fa5be24cb09c35a91e81ef2bbf71af',
-    'molg': 'c5594cd3363607bdfbf0803e0ae05b98'
+    'monologue1': 'c5594cd3363607bdfbf0803e0ae05b98', #factory preset
+    'monologue2': '7863e5bf4a351456155b549c24eca178',
+    'kk': 'c2f4605587c157c52c41c9fac56fc5d3',
 }
 def is_init_patch(flavour, hash):
     """True iff the hash matches the Init Program md5 checksum for the corresponding flavour
@@ -63,6 +66,8 @@ def is_init_patch(flavour, hash):
     """
     if flavour == "og":
         return hash in {init_program_hashes["og1"], init_program_hashes["og2"]}
+    elif flavour == "monologue":
+        return hash in {init_program_hashes["monologue1"], init_program_hashes["monologue2"]}
     else:
         return init_program_hashes[flavour] == hash
 
@@ -72,10 +77,11 @@ def is_init_program_name(name):
 
 
 flavour_to_product = {
-        "molg":"monologue",
         "xd":"xd",
         "og":"minilogue",
-        "prologue":"prologue"
+        "prologue":"prologue",
+        "monologue":"monologue",
+        "kk": "KingKORG",
     }
 
 
@@ -129,7 +135,7 @@ def fileinfo_xml(flavour, non_init_patch_ids, force_preset):
     root = ET.Element("KorgMSLibrarian_Data")
     product = ET.SubElement(root, "Product")
     product.text = {
-        "molg":"monologue",
+        "monologue":"monologue",
         "xd":"minilogue xd",
         "og":"minilogue",
         "prologue":"prologue"
@@ -148,7 +154,7 @@ def fileinfo_xml(flavour, non_init_patch_ids, force_preset):
     if len(non_init_patch_ids) <= 1 or force_preset:
         if flavour == "prologue":
             contents.set("NumLivesetData", "0")
-        elif flavour != "molg":
+        elif flavour != "monologue":
             contents.set("NumFavoriteData", "0")
     else:
         if flavour == "prologue":
@@ -156,7 +162,7 @@ def fileinfo_xml(flavour, non_init_patch_ids, force_preset):
             fave = ET.SubElement(contents, "LivesetData")
             fave_info = ET.SubElement(fave, "File")
             fave_info.text = "LivesetData.lvs_data"
-        elif flavour != "molg":
+        elif flavour != "monologue":
             contents.set("NumFavoriteData", "1")
             fave = ET.SubElement(contents, "FavoriteData")
             fave_info = ET.SubElement(fave, "File")
@@ -207,14 +213,26 @@ def presetinfo_xml(flavour, dataid, name, author, version, numofprog, date, pref
     return formatted_xml
 
 
-patch_suffixes = {
-    ".mnlgxdprog", ".mnlgprog", ".prlgprog", ".molgprog"
-}
-lib_suffixes = {
-    ".mnlgxdpreset", ".mnlgpreset", ".prlgpreset", ".molgpreset"
-    ".mnlgxdlib", ".mnlglib", ".prlglib", ".molgplib"
-}
+presuffixes = [".mnlgxd", ".mnlg", ".prlg", ".molg", ".kk"]
+patch_suffixes = {i + "prog" for i in presuffixes}
+lib_suffixes = {i + "lib" for i in presuffixes}
+preset_suffixes = {i + "preset" for i in presuffixes}
+collection_suffixes = lib_suffixes | preset_suffixes
+all_suffixes = collection_suffixes | patch_suffixes
 
+postsuffixes = ["prog", "lib", "preset"]
+xd_suffixes = {".mnlgxd" + i for i in postsuffixes}
+og_suffixes = {".mnlg" + i for i in postsuffixes}
+prologue_suffixes = {".prlg" + i for i in postsuffixes}
+monologue_suffixes = {".molg" + i for i in postsuffixes}
+kk_suffixes = {".kk" + i for i in postsuffixes}
+suffixes_dict = {
+        "xd":xd_suffixes,
+        "og":og_suffixes,
+        "prologue":prologue_suffixes,
+        "monologue":monologue_suffixes,
+        "kk":kk_suffixes,
+    }
 
 def file_type(suffix):
     """Identify file data as being a minilogue xd, minilogue og, or prologue patch by
@@ -232,15 +250,11 @@ def file_type(suffix):
     """
     assert suffix in lib_suffixes | patch_suffixes
     logue_type = None
-    if suffix in {".molgpreset", ".molglib", ".molgprog"}:
-        logue_type = "molg"
-    if suffix in {".mnlgxdpreset", ".mnlgxdlib", ".mnlgxdprog"}:
-        logue_type = "xd"
-    if suffix in {".mnlgpreset", ".mnlglib", ".mnlgprog"}:
-        logue_type = "og"
-    if suffix in {".prlgpreset", ".prlglib", ".prlgprog"}:
-        logue_type = "prologue"
-    if suffix in lib_suffixes:
+    for i in suffixes_dict:
+        if suffix in suffixes_dict[i]:
+            logue_type = i
+
+    if suffix in collection_suffixes:
         collection = True
     else:
         collection = False
@@ -268,7 +282,7 @@ def patch_type(data):
     try:
         struct.unpack_from("B", data, offset=447)
         if struct.unpack_from("4s", data, offset=0x30)[0].decode('ansi') == 'SEQD':
-            return "molg"
+            return "monologue"
         else:
             return "og"
     except struct.error:
@@ -451,9 +465,9 @@ def parse_patchdata(data):
     elif patch.minilogue_type == "prologue":
         patch_struct = prologue.patch_struct
         tuple_decoder = prologue.patch_value
-    elif patch.minilogue_type == "molg":
-        patch_struct = molg.patch_struct
-        tuple_decoder = molg.patch_value
+    elif patch.minilogue_type == "monologue":
+        patch_struct = monologue.patch_struct
+        tuple_decoder = monologue.patch_value
     else:
         patch_struct = og.minilogue_og_patch_struct
         tuple_decoder = og.patch_value

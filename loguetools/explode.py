@@ -47,7 +47,10 @@ def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_
         flavour = "prologue"
     elif input_file.suffix in {".molgpreset", ".molglib"}:
         suffix = ".molgprog"
-        flavour = "molg"
+        flavour = "monologue"
+    elif input_file.suffix in {".kklib"}:
+        suffix = ".kkprog"
+        flavour = "kk"
     fileinfo_xml = common.fileinfo_xml(flavour, [0], False)
 
     # Read any copyright and author information if available

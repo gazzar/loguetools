@@ -922,7 +922,7 @@ patch_struct = {
     ("arp_gate_time", "B", 0),
     ("arp_rate", "B", "arp_rate"),   # **
     ),
-    "molg":(
+    "monologue":(
     # 0
     ("str_PROG", "4s", "str_PROG"),
     ("program_name", "12s", "program_name"),
