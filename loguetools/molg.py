@@ -96,7 +96,7 @@ patch_normalisation = (
     ("vco_2_shape", "vco_2_shape_b2_9_FF_2", "vco_2_pitch_shape_octave_wave_0C_E"),
     ("vco_2_octave", "vco_2_pitch_shape_octave_wave_30_C"),
     ("vco_2_wave", "vco_2_pitch_shape_octave_wave_C0_A"),
-    ("sync_ring", "sync_ring_keyboard_octave_03_0"),
+    ("ring_sync", "sync_ring_keyboard_octave_03_0"),
     ("keyboard_octave", "sync_ring_keyboard_octave_0C_E"),
     ("vco_1_level", "vco_1_level_b2_9_FF_2", "vco1_lvl_vco2_lvl_cutoff_res_03_0"),
     ("vco_2_level", "vco_2_level_b2_9_FF_2", "vco1_lvl_vco2_lvl_cutoff_res_0C_E"),
