@@ -6,7 +6,7 @@ import struct
 from pprint import pprint
 import pathlib
 import re
-from loguetools import og, xd, prlg as prologue, molg, common
+from loguetools import og, xd, prologue, monologue, common
 
 
 XD_PATCH_LENGTH = 1024
@@ -51,7 +51,7 @@ def convert_from_syx(filename):
     with open(filename, "rb") as f:
         f.seek(5)
         flavor = {
-            0x44:"molg",
+            0x44:"monologue",
             0x51:"xd",
             0x2C:"og",
             0x4B:"prologue"
@@ -107,7 +107,7 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
         proglist = ["Prog_000.prog_bin"]
         (flavor, patchdata) = convert_from_syx(input_file)
         patch_ext = {
-            "molg":".molgprog",
+            "monologue":".molgprog",
             "xd":".mnlgxdprog",
             "og":".mnlgprog",
             "prologue":".prlgprog"
@@ -167,9 +167,9 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
                     raw_og_patch = common.parse_patchdata(patchdata)
                     patch = prologue.normalise_patch(raw_og_patch)
                     patch_xd, patchdata = convert_to_xd(patch, flavour)
-                elif flavour == 'molg':
+                elif flavour == 'monologue':
                     raw_og_patch = common.parse_patchdata(patchdata)
-                    patch = molg.normalise_patch(raw_og_patch)
+                    patch = monologue.normalise_patch(raw_og_patch)
                     patch_xd, patchdata = convert_to_xd(patch, flavour)
 
             # .prog_bin record/file

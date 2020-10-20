@@ -6,7 +6,7 @@ import struct
 from pprint import pprint
 import pathlib
 import re
-from loguetools import og, xd, prlg as prologue, common
+from loguetools import common
 import glob
 from os.path import join, split, splitext
 
@@ -16,7 +16,7 @@ def collapse(filename, unskip_init, force_preset):
         proglist.extend(glob.glob(join(filename, "*" + p)))
 
     (flavor, lib_ext, preset_ext) = {
-        ".molgprog": ("molg", ".molglib", ".molgpreset"),
+        ".molgprog": ("monologue", ".molglib", ".molgpreset"),
         ".mnlgxdprog": ("xd", ".mnlgxdlib", ".mnlgxdpreset"),
         ".mnlgprog": ("og", ".mnlglib", ".mnlgpreset"),
         ".prlgprog": ("prologue", ".prlglib", ".prlgpreset")
