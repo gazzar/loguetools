@@ -6,7 +6,7 @@ import pathlib
 import hashlib
 import re
 from loguetools import og, xd, common
-import version
+from loguetools import version
 
 
 XD_PATCH_LENGTH = 1024
@@ -52,6 +52,7 @@ def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_
         suffix = ".kkprog"
         flavour = "kk"
     fileinfo_xml = common.fileinfo_xml(flavour, [0], False)
+    fileinfo_xml = common.fileinfo_xml(flavour, [0])
 
     # Read any copyright and author information if available
     copyright = None
@@ -63,12 +64,12 @@ def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_
     sanitise = common.sanitise_patchname()
     for i, p in enumerate(proglist):
         patchdata = zipobj.read(p)
-        prgname = common.program_name(patchdata)
         hash = hashlib.md5(patchdata).hexdigest()
         flavour = common.patch_type(patchdata)
         if common.is_init_patch(flavour, hash):
             # Init Program identified based on hash; i.e. a "True" Init Program
             continue
+        prgname = common.program_name(patchdata, flavour)
         if common.is_init_program_name(prgname) and not unskip_init:
             # Init Program found and option not to skip is unchecked
             continue

@@ -324,8 +324,8 @@ def fn_translate_step_data(og_step_data):
     xd_buffer[8:12] = og_step_data[4:8]
     # gates and triggers
     xd_buffer[16:20] = og_step_data[8:12]
-    # motion data; xd is 10 bit and og is 8-bit; not I'm not sure if I should shift them
-    # I think I will just copy across to slots 0-3
+    # motion data; xd is 10 bit and og is 8-bit; I'm not sure if I should shift them.
+    # I think I will just copy across to slots 0-3.
     xd_buffer[24:26] = og_step_data[12:14]
     xd_buffer[31:33] = og_step_data[14:16]
     xd_buffer[38:40] = og_step_data[16:18]
@@ -1262,7 +1262,7 @@ Minilogue XD
 +---------+-------+---------+---------------------------------------------+
 |   16    |       |  0~4    |  OCTAVE                           0~4=-2~+2 |
 +---------+-------+---------+---------------------------------------------+
-|   17    |       |  0,1    |  PORTAMENTO *note G1                  0~127 |
+|   17    |       |  0~127  |  PORTAMENTO                           0~127 |
 +---------+-------+---------+---------------------------------------------+
 |   18    |       |  0,1    |  KEY TRIG                        0,1=Off,On |
 +---------+-------+---------+---------------------------------------------+
@@ -1341,7 +1341,7 @@ Minilogue XD
 +---------+-------+---------+---------------------------------------------+
 |   64    |       |  0~2    |  CUTOFF DRIVE                      *note P9 |
 +---------+-------+---------+---------------------------------------------+
-|   65    |       |  0~2    |  CUTOFF KEYBOARD TRACK             *note P9 |
+|   65    |       |  0~2    |  CUTOFF KEYBOARD TRACK             *note G4 |
 +---------+-------+---------+---------------------------------------------+
 |   66    | L:0~7 |  0~1023 |  AMP EG ATTACK                              |
 |   67    | H:0~1 |         |                                             |
@@ -1624,19 +1624,11 @@ Minilogue XD
 |  1023   |       |  0~10   |  ARP Rate                          *note S4 |
 +---------+-------+---------+---------------------------------------------+
 
-*Note G1
-Korg's table shows
-|   17    |       |  0,1    |  PORTAMENTO                           0~127 |
-I assume this should be
-|   17    |       |  0~127  |  PORTAMENTO                           0~127 |
-
-*Note G2
+*Note G3
 Korg's note P3 table shows 1, 2, 2, 3 but should be 1, 2, 3, 4
 Korg's note P2 shows 0~73:5th but it should be more like 0~1:Mono 2~73:5th
 I don't know if the breakover is from 1 to 2 or greater, but I will assume that.
 
-Tables say Sync and Ring settings are inverted but that isn't true.
 Delay time needs scaling: og max delay=350ms, xd high-pass max delay=654ms
-Tables say Filter cutoff keyboard tracking value is the same but I find 0->2 -> 2->0
 
 """

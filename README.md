@@ -6,7 +6,7 @@ It perform a few tasks:
 * Translation of patches from the (original) minilogue to the minilogue xd. See the [translation](#translation) section for a description and limitations.  
 (For *minilogue xd*)
 * Bulk extraction of all patches in collections to separate patch files.  
-(For *minilogue*, *minilogue xd* and *prologue*)
+(For *minilogue*, *minilogue xd*, *prologue*, *monologue*, and *KingKORG*)
 * Readable display of patch contents.  
 (For *minilogue* and *minilogue xd*)
 
@@ -39,7 +39,7 @@ pip will install the script entry points. All tools contain documention for para
 **dump** (For *minilogue* and *minilogue xd*)  
 Display the contents of a program or preset pack. -m generates md5 checksums for patches.
 
-**explode** (For *minilogue*, *minilogue xd* and *prologue*)  
+**explode** (For *minilogue*, *minilogue xd*, *prologue*, *monologue*, and *KingKORG*)  
 Bulk extraction of individual patches from libraries.
 
 **translate** (For *minilogue xd*)  
@@ -48,7 +48,7 @@ Translate (original) minilogue patches to the minilogue xd.
 
 # Limitations
 
-The hardware and routing possibilities for the OG and xd differ in significant ways. The translate tool tries to make sensible choices about setting the xd's EG and LFO hardware to match the original patch but the options are limited.
+The hardware and routing possibilities for the og and xd differ in significant ways. The translate tool tries to make sensible choices about setting the xd's EG and LFO hardware to match the original patch but the options are limited.
 
 I don't own an original minilogue so I have limited ability to test the translation accuracy. I found [Jeff Kistler's minilogue editor](https://github.com/jeffkistler/minilogue-editor) very helpful for checking some of the parameter translations. Korg's documentation has some errors and omissions and I haven't worked out how to translate everything correctly yet; if you notice a problem, let me know or create an issue!
 
