@@ -52,7 +52,6 @@ def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_
         suffix = ".kkprog"
         flavour = "kk"
     fileinfo_xml = common.fileinfo_xml(flavour, [0], False)
-    fileinfo_xml = common.fileinfo_xml(flavour, [0])
 
     # Read any copyright and author information if available
     copyright = None
