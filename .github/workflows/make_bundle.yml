@@ -26,7 +26,17 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pyinstaller
           python -m pip install click
+      - name: Install wxPython dependency on Windows/Mac
+        if: runner.os != 'Linux'
+        run: |
           python -m pip install wxpython
+          python -m pip freeze
+      - name: Install wxPython dependency n Linux
+        if: runner.os == 'Linux'
+        run: |
+          python -m pip install -U \
+              -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-16.04 \
+              wxPython
           python -m pip freeze
       - name: Create and Build Bundle
         run: pyinstaller --clean --windowed --onefile main.spec
