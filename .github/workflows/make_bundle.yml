@@ -34,7 +34,7 @@ jobs:
       - name: Install wxPython dependency n Linux
         if: runner.os == 'Linux'
         run: |
-          apt-get install python-wxgtk3.0
+          sudo apt-get install python-wxgtk3.0
           python -m pip freeze
       - name: Create and Build Bundle
         run: pyinstaller --clean --windowed --onefile main.spec
