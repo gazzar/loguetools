@@ -13,7 +13,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
-        'Click',
+        'click',
+        'wxPython',
     ],
     py_modules=[],
     entry_points='''
