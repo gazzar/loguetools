@@ -10,6 +10,7 @@ from loguetools import common
 import glob
 from os.path import join, split, splitext
 
+
 def collapse(filename, unskip_init, force_preset):
     proglist = []
     for p in common.patch_suffixes:
