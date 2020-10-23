@@ -42,6 +42,9 @@ Display the contents of a program or preset pack. -m generates md5 checksums for
 **explode** (For *minilogue*, *minilogue xd*, *prologue*, *monologue*, and *KingKORG*)  
 Bulk extraction of individual patches from libraries.
 
+**collapse** (For *minilogue*, *minilogue xd*, *prologue*, *monologue*, and *KingKORG*)  
+Libraries and preset banks from individual patches.
+
 **translate** (For *minilogue xd*)  
 Translate (original) minilogue patches to the minilogue xd.
 
@@ -66,3 +69,13 @@ Application icon "tools by i cons from the Noun Project"
 
 # Development notes
 Suggestions and bug reports are welcome. Pull requests will probably be welcome; feel free to create a feature suggestion first to discuss.
+
+# Contributors
+[Oleg Burdaev](https://github.com/dukesrg/)
+* preset bank format
+* collapse tool
+* monologue and prologue support
+  
+[Genevieve Buckley](https://github.com/GenevieveBuckley)  
+* CI/CD
+* Linux build
