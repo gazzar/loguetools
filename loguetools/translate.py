@@ -90,7 +90,7 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
     assert input_file.suffix in {".mnlgprog", ".mnlgpreset", ".mnlglib", ".prlgprog", ".prlgpreset", ".prlglib", ".molgprog", ".molgpreset", ".molglib", ".syx"}
 
     if input_file.suffix != ".syx":
-        flavour = "xd"
+        out_flavour = "xd"
         zipobj = ZipFile(filename, "r", compression=ZIP_DEFLATED, compresslevel=9)
         proglist = common.zipread_progbins(zipobj)
 
@@ -105,13 +105,13 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
     if input_file.suffix == ".syx":
         stem = input_file.stem
         proglist = ["Prog_000.prog_bin"]
-        flavour, patchdata = convert_from_syx(input_file)
+        out_flavour, patchdata = convert_from_syx(input_file)
         patch_ext = {
             "monologue":".molgprog",
             "xd":".mnlgxdprog",
             "og":".mnlgprog",
             "prologue":".prlgprog"
-        }[flavour]
+        }[out_flavour]
 
     elif match_ident is not None:
         proglist = [proglist[match_ident - 1]]
@@ -176,7 +176,7 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
             xdzip.writestr(f"Prog_{i:03d}.prog_bin", patchdata)
 
             # .prog_info record/file
-            prog_info_xd = common.prog_info_template_xml(flavour)
+            prog_info_xd = common.prog_info_template_xml(out_flavour)
             xdzip.writestr(f"Prog_{i:03d}.prog_info", prog_info_xd)
 
             numofprog += 1
@@ -186,21 +186,21 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
                 print()
 
         if len(proglist) > 1 and not force_preset:
-            if flavour == "prologue":
-                xdzip.writestr(f"LivesetData.lvs_data", getattr(globals()[flavour], "favorite_template"))
+            if out_flavour == "prologue":
+                xdzip.writestr(f"LivesetData.lvs_data", getattr(globals()[out_flavour], "favorite_template"))
             else:
                 # FavoriteData.fav_data record/file
                 try:
-                    xdzip.writestr(f"FavoriteData.fav_data", getattr(globals()[flavour], "favorite_template"))
+                    xdzip.writestr(f"FavoriteData.fav_data", getattr(globals()[out_flavour], "favorite_template"))
                 except:
                     pass
 
         if force_preset:
-            xdzip.writestr(f"PresetInformation.xml", common.presetinfo_xml(flavour, dataid, name, author, version, str(numofprog), date, prefix, copyright))
+            xdzip.writestr(f"PresetInformation.xml", common.presetinfo_xml(out_flavour, dataid, name, author, version, str(numofprog), date, prefix, copyright))
 
 
         # FileInformation.xml record/file
-        xdzip.writestr(f"FileInformation.xml", common.fileinfo_xml(flavour, non_init_patch_ids, force_preset))
+        xdzip.writestr(f"FileInformation.xml", common.fileinfo_xml(out_flavour, non_init_patch_ids, force_preset))
 
         print("Wrote", output_file)
 
