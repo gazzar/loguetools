@@ -28,7 +28,7 @@ def convert_to_xd(patch, flavour):
 
     offset = 0
     for m in xd.patch_struct[flavour]:
-        f = xd.patch_translation_value[flavour](*m)
+        f = xd.patch_translation_value(*m)
         if isinstance(f.source, str):
             value = getattr(patch, f.source)
         elif isinstance(f.source, (int, bytes)):
