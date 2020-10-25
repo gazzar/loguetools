@@ -51,7 +51,7 @@ def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_
     elif input_file.suffix in {".kklib"}:
         suffix = ".kkprog"
         flavour = "kk"
-    fileinfo_xml = common.fileinfo_xml(flavour, [0])
+    fileinfo_xml = common.fileinfo_xml(flavour, [0], False)
 
     # Read any copyright and author information if available
     copyright = None
@@ -98,7 +98,7 @@ def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_
             zip.writestr(f"Prog_000.prog_info", prog_info_template)
 
             # FileInformation.xml record/file
-            zip.writestr(f"FileInformation.xml", fileinfo_xml)
+            zip.writestr(f"FileInformation.xml", fileinfo_xml, False)
 
         print(f"{int(p[5:8])+1:03d}: {prgname:<12s}  ->  {output_path}")
 

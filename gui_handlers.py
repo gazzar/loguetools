@@ -187,7 +187,7 @@ class MyFrame(MainFrame):
 
     def OnTranslate(self, event):
         unskip_init = self.m_checkBox_inits.GetValue()
-        translate(self.file, None, None, None, unskip_init)
+        translate(self.file, None, None, None, unskip_init, False)
 
     def OnExplode(self, event):
         prepend_id = self.m_checkBox_id.GetValue()

@@ -41,8 +41,101 @@ og_slider_to_xd = {
    26: 28, # DELAY FEEDBACK
    27:  1, # Portament Time
    28:  2, # VOICE MODE DEPTH
+   77: 12, # PITCH BEND alt.
+   78:  0, # GATE TIME alt.
 }
 
+prologue_mod_wheel_to_xd = {
+#    0 : # BALANCE
+    1 : 1, # PORTAMENTO
+#    2 : # V.SPREAD
+    3 : 2, # V.M DEPTH
+    4 : 3, # VCO1 PITCH
+    5 : 4, # VCO1 SHAPE
+    6 : 5, # VCO2 PITCH
+    7 : 6, # VCO2 SHAPE
+    8 : 7, # CROSS MOD
+    9 : 20, # PITCH EG INT -> EG INT
+    10 : 8, # MULTI SHAPE
+    11 : 9, # VCO1 LEVEL
+    12 : 10, # VCO2 LEVEL
+    13 : 11, # MULTI LEVEL
+    14 : 12, # CUTOFF
+    15 : 13, # RESONANCE
+    16 : 20, # CUTOFF EG INT -> EG INT
+    17 : 14, # A.EG ATTACK
+    18 : 15, # A.EG DECAY
+    19 : 16, # A.EG SUSTAIN
+    20 : 17, # A.EG RELEASE
+    21 : 18, # EG ATTACK
+    22 : 19, # EG DECAY
+#    23 : # EG SUSTAIN
+#    24 : # EG RELEASE
+    25 : 21, # LFO RATE
+    26 : 22, # LFO INT
+    27 : 23, # MOD FX SPEED
+    28 : 24, # MOD FX DEPTH
+#todo: change with the patch default delay/reverb fx
+    29 : 27, # DL/RV TIME -> DELAY TIME
+    30 : 28, # DL/RV DEPTH -> DELAY DEPTH
+    31 : 0, # GATE TIME
+}
+
+prologue_e_pedal_to_xd = {
+#    0 : # OFF
+#    1 : # VOLUME
+#    2 : # BALANCE
+    3 : 1, # PORTAMENTO
+#    4 : # V.SPREAD
+    5 : 2, # V.M DEPTH
+    6 : 3, # VCO1 PITCH
+    7 : 4, # VCO1 SHAPE
+    8 : 5, # VCO2 PITCH
+    9 : 6, # VCO2 SHAPE
+    10 : 7, # CROSS MOD
+    11 : 20, # PITCH EG INT -> EG INT
+    12 : 8, # MULTI SHAPE
+    13 : 9, # VCO1 LEVEL
+    14 : 10, # VCO2 LEVEL
+    15 : 11, # MULTI LEVEL
+    16 : 12, # CUTOFF
+    17 : 13, # RESONANCE
+    18 : 20, # CUTOFF EG INT
+    19 : 14, # A.EG ATTACK
+    20 : 15, # A.EG DECAY
+    21 : 16, # A.EG SUSTAIN
+    22 : 17, # A.EG RELEASE
+    23 : 18, # EG ATTACK
+    24 : 19, # EG DECAY
+#    25 : # EG SUSTAIN
+#    26 : # EG RELEASE
+    27 : 21, # LFO RATE
+    28 : 22, # LFO INT
+    29 : 23, # MOD FX SPEED
+    30 : 24, # MOD FX DEPTH
+#todo: change with the patch default delay/reverb fx
+    31 : 27, # DL/RV TIME
+    32 : 28, # DL/RV DEPTH
+}
+
+molg_slider_to_xd = {
+    13:  3, # VCO 1 PITCH
+    14:  4, # VCO 1 SHAPE
+    17:  5, # VCO 2 PITCH
+    18:  6, # VCO 2 SHAPE
+    21:  9, # VCO 1 LEVEL
+    22: 10, # VCO 2 LEVEL
+    23: 12, # CUTOFF
+    24: 13, # RESONANCE
+    26: 50, # EG ATTACK
+    27: 51, # EG DECAY
+    28: 20, # EG INT
+    31: 21, # LFO RATE
+    32: 22, # LFO INT
+    40:  1, # Portament Time
+    56: 12, # PITCH BEND. This is taken care of by +/-x on the xd so I default to filter EG.
+    57:  0, # GATE TIME
+}
 
 og_motion_to_xd = {
      0:  0,     # None
@@ -88,19 +181,65 @@ og_motion_to_xd = {
     62: 129,     # GATE TIME
 }
 
+molg_motion_to_xd = {
+     0:  0,     # None
+    13: 20,     # VCO 1 PITCH
+    14: 21,     # VCO 1 SHAPE
+    15: 18,     # : 19? VCO 1 OCTAVE **og WAVE maybe
+    16: 19,     # : 18? VCO 1 OCTAVE **one of these might be WAVE
+    17: 24,     # VCO 2 PITCH
+    18: 25,     # VCO 2 SHAPE  *docs say VCO 1
+    19: 22,     # : 23? VCO 1 OCTAVE *docs say VCO 1
+    20: 23,     # : 22? VCO 1 OCTAVE *docs say VCO 1
+    21: 39,     # VCO 1 LEVEL
+    22: 40,     # VCO 2 LEVEL
+    23: 42,     # CUTOFF
+    24: 43,     # RESONANCE
+    25: 26,     # SYNC
+#    25: 27,     # RING
+    26: 50,     # EG ATTACK
+    27: 51,     # EG DECAY
+    28: 52,     # EG INT
+    29:  0,     #EG TYPE
+    30: 53,      #EG TARGET
+    31: 56,     # LFO RATE
+    32: 57,     # LFO INT
+    33: 58,     # LFO TARGET
+    34: 57,     # LFO EG
+    35: 54,     # LFO TYPE
+    37:  0,     # DRIVE
+    56: 126,     # PITCH BEND
+    57: 129,     # GATE TIME
+}
 
 fn_motion_slot_1_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_1_1_parameter, 0)
 fn_motion_slot_2_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_2_1_parameter, 0)
 fn_motion_slot_3_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_3_1_parameter, 0)
 fn_motion_slot_4_parameter = lambda src: og_motion_to_xd.get(src.motion_slot_4_1_parameter, 0)
 
+fn_molg_motion_slot_1_parameter = lambda src: molg_motion_to_xd.get(src.motion_slot_1_1_parameter, 0)
+fn_molg_motion_slot_2_parameter = lambda src: molg_motion_to_xd.get(src.motion_slot_2_1_parameter, 0)
+fn_molg_motion_slot_3_parameter = lambda src: molg_motion_to_xd.get(src.motion_slot_3_1_parameter, 0)
+fn_molg_motion_slot_4_parameter = lambda src: molg_motion_to_xd.get(src.motion_slot_4_1_parameter, 0)
+
 fn_slider_right = lambda src: og_slider_to_xd.get(src.slider_assign, 12)
 fn_slider_left = lambda src: og_slider_to_xd.get(src.slider_assign, 12)
 fn_bend_range_plus = lambda src: int(100 + src.bend_range_plus * 100 / 12)
 fn_bend_range_minus = lambda src: int(100 + src.bend_range_minus * 100 / 12)
 
+fn_midi_after_touch_assign = lambda src: prologue_mod_wheel_to_xd.get(src.midi_after_touch_assign, 0)
+fn_mod_wheel_assign = lambda src: prologue_mod_wheel_to_xd.get(src.mod_wheel_assign, 0)
+fn_e_pedal_assign = lambda src: prologue_e_pedal_to_xd.get(src.e_pedal_assign, 0)
+fn_slider = lambda src: molg_slider_to_xd.get(src.slider_assign, 0)
+
 # Simple translation functions
 fn_delay_on_off = lambda src: 0 if src.delay_output_routing == 0 else 1
+fn_prologue_delay_on_off = lambda src: 1 if src.delay_reverb_on_off != 0 and src.delay_reverb_type == 1 else 0
+fn_prologue_reverb_on_off = lambda src: 1 if src.delay_reverb_on_off != 0 and src.delay_reverb_type == 2 else 0
+
+fn_sync = lambda src: 1 if src.ring_sync == 2 else 0
+fn_ring = lambda src: 1 if src.ring_sync == 0 else 0
+
 fn_str_pred = lambda src: "PRED"
 fn_str_sq = lambda src: "SQ"
 # XD swing encoding is 0,75,150=-75%,0,+75% but OG uses something else; maybe 2's complement?
@@ -109,8 +248,28 @@ fn_cutoff_velocity = lambda src: (0, 63, 127)[src.cutoff_velocity]
 fn_cutoff_kbd_track = lambda src: 2 - src.cutoff_kbd_track
 fn_multi_octave = lambda src: 0 if src.vco_1_octave == 0 else src.vco_1_octave - 1
 fn_voice_mode_type = lambda src: {0: 4, 1: 4, 2: 3, 3: 2, 4: 2, 5: 4, 6: 1, 7: 4}[src.voice_mode]
+fn_prologue_voice_mode_type = lambda src: {0: 4, 1: 4, 2: 3, 3: 2}[src.voice_mode_type] if src.arp == 0 else 1
+fn_prologue_voice_mode_depth = lambda src: {0: 0, 1: 157, 2: 313, 3: 469, 4:781, 5: 1023}[src.arp_type] if src.arp != 0 else src.voice_mode_depth
+# Assumption: pitch EG is favored over cutoff eg
+fn_prologue_eg_int = lambda src: src.pitch_eg_int if src.pitch_eg_int > 0 else src.cutoff_eg_int
+fn_prologue_eg_target = lambda src: 2 if src.pitch_eg_int > 0 else 0
+fn_prologue_lfo_mode = lambda src: {0: 3, 1: 1, 2: 1}[src.lfo_mode]
+fn_vco_2_level = lambda src: src.vco_2_level if src.vco_2_wave != 0 else 0
+fn_vco_2_octave = lambda src: src.vco_2_octave if src.vco_2_wave != 0 else 1
+fn_vco_2_pitch = lambda src: src.vco_2_pitch if src.vco_2_wave != 0 else 0
+fn_vco_2_shape = lambda src: src.vco_2_shape if src.vco_2_wave != 0 else 0
+fn_multi_level = lambda src: src.vco_2_level if src.vco_2_wave == 0 else 0
+fn_molg_multi_octave = lambda src: src.vco_2_octave if src.vco_2_wave == 0 else 1
+fn_molg_lfo_mode = lambda src: 2 if src.lfo_bpm_sync != 0 else {0: 0, 1: 1, 2: 1}[src.lfo_mode]
+fn_drive = lambda src: (src.drive * 3) >> 10
+fn_amp_eg_attack = lambda src: src.eg_attack if src.eg_type != 2 else 0
+fn_amp_eg_decay = lambda src: src.eg_decay if src.eg_type == 0 else 0
+fn_amp_eg_sustain = lambda src: 0 if src.eg_type == 0 else 1023
+fn_amp_eg_release = lambda src: src.eg_decay if src.eg_type == 1 else 0
+
 # The following seems wrong; need more data
 fn_delay_time = lambda src: int(src.delay_time * 350.0 / 654.0)
+fn_bmp = lambda src: 3000 if src.bpm > 3000 else src
 
 # Based on the SonicLabs review, the minilogue's portamento time setting encodes both
 # the portamento time and the EG Legato setting. The OG midi docs say
@@ -173,6 +332,23 @@ def fn_translate_step_data(og_step_data):
     xd_buffer[45:47] = og_step_data[18:20]
     return xd_buffer
 
+def fn_molg_translate_step_data(molg_step_data):
+    xd_buffer = bytearray(52 * b"\x00")
+    # notes
+    xd_buffer[0] = molg_step_data[0]
+    # note velocities
+    xd_buffer[8] = molg_step_data[2]
+    # gates and triggers
+    xd_buffer[16] = molg_step_data[4]
+    # motion data; xd is 10 bit and og is 8-bit; not I'm not sure if I should shift them
+    # I think I will just copy across to slots 0-3
+    xd_buffer[24:28] = molg_step_data[6:10]
+    xd_buffer[31:35] = molg_step_data[10:14]
+    xd_buffer[38:42] = molg_step_data[14:18]
+    xd_buffer[45:49] = molg_step_data[18:22]
+    return xd_buffer
+
+fn_empty_step_data = lambda src: bytearray(52 * b"\x00")
 
 fn_step_01_event_data = lambda src: fn_translate_step_data(src.step_01_event_data)
 fn_step_02_event_data = lambda src: fn_translate_step_data(src.step_02_event_data)
@@ -190,6 +366,23 @@ fn_step_13_event_data = lambda src: fn_translate_step_data(src.step_13_event_dat
 fn_step_14_event_data = lambda src: fn_translate_step_data(src.step_14_event_data)
 fn_step_15_event_data = lambda src: fn_translate_step_data(src.step_15_event_data)
 fn_step_16_event_data = lambda src: fn_translate_step_data(src.step_16_event_data)
+
+fn_molg_step_01_event_data = lambda src: fn_molg_translate_step_data(src.step_01_event_data)
+fn_molg_step_02_event_data = lambda src: fn_molg_translate_step_data(src.step_02_event_data)
+fn_molg_step_03_event_data = lambda src: fn_molg_translate_step_data(src.step_03_event_data)
+fn_molg_step_04_event_data = lambda src: fn_molg_translate_step_data(src.step_04_event_data)
+fn_molg_step_05_event_data = lambda src: fn_molg_translate_step_data(src.step_05_event_data)
+fn_molg_step_06_event_data = lambda src: fn_molg_translate_step_data(src.step_06_event_data)
+fn_molg_step_07_event_data = lambda src: fn_molg_translate_step_data(src.step_07_event_data)
+fn_molg_step_08_event_data = lambda src: fn_molg_translate_step_data(src.step_08_event_data)
+fn_molg_step_09_event_data = lambda src: fn_molg_translate_step_data(src.step_09_event_data)
+fn_molg_step_10_event_data = lambda src: fn_molg_translate_step_data(src.step_10_event_data)
+fn_molg_step_11_event_data = lambda src: fn_molg_translate_step_data(src.step_11_event_data)
+fn_molg_step_12_event_data = lambda src: fn_molg_translate_step_data(src.step_12_event_data)
+fn_molg_step_13_event_data = lambda src: fn_molg_translate_step_data(src.step_13_event_data)
+fn_molg_step_14_event_data = lambda src: fn_molg_translate_step_data(src.step_14_event_data)
+fn_molg_step_15_event_data = lambda src: fn_molg_translate_step_data(src.step_15_event_data)
+fn_molg_step_16_event_data = lambda src: fn_molg_translate_step_data(src.step_16_event_data)
 
 
 """
@@ -307,7 +500,7 @@ def eg_and_lfo_mapping(src):
         lfo_mode = 0       # LFO MODE 0~2=1-SHOT,NORMAL,BPM
         # Translate the LFO RATE value from the EG AD values
         # Choose saw or triangle
-        if src.eg_attack / (src.eg_attack + src.eg_decay) < 0.25:
+        if (src.eg_attack + src.eg_decay) == 0 or src.eg_attack / (src.eg_attack + src.eg_decay) < 0.25:
             lfo_wave = 2    # saw
         else:
             lfo_wave = 1    # triangle
@@ -414,7 +607,8 @@ the forms
 ('label', 'binary-format string', f), where f is a function
 
 """
-minilogue_xd_patch_struct = (
+patch_struct = {
+    "og":(
     # 0
     ("str_PROG", "4s", "str_PROG"),
     ("program_name", "12s", "program_name"),
@@ -569,10 +763,322 @@ minilogue_xd_patch_struct = (
     # 1022
     ("arp_gate_time", "B", "default_gate_time"),
     ("arp_rate", "B", 5),   # **
-)
 # ** Seems to be off by 1 in Korg's docs; set to 5 to get 16th notes.
 # Minilogue arp only plays 16th notes unless you halve the tempo?
-
+    ),
+    "prologue":(
+    ("str_PROG", "4s", "str_PROG"),
+    ("program_name", "12s", "program_name"),
+    ("octave", "B", "keyboard_octave"),
+    ("portamento", "B", "portamento_time"),
+    ("key_trig", "B", 0),
+    ("voice_mode_depth", "<H", fn_prologue_voice_mode_depth),
+    ("voice_mode_type", "B", fn_prologue_voice_mode_type),
+    ("vco_1_wave", "B", "vco_1_wave"),
+    ("vco_1_octave", "B", "vco_1_octave"),
+    ("vco_1_pitch", "<H", "vco_1_pitch"),
+    ("vco_1_shape", "<H", "vco_1_shape"),
+    ("vco_2_wave", "B", "vco_2_wave"),
+    ("vco_2_octave", "B", "vco_2_octave"),
+    ("vco_2_pitch", "<H", "vco_2_pitch"),
+    ("vco_2_shape", "<H", "vco_2_shape"),
+    ("sync", "B", fn_sync),
+    ("ring", "B", fn_ring),
+    ("cross_mod_depth", "<H", "cross_mod_depth"),
+    ("multi_type", "B", "multi_type"),
+    ("select_noise", "B", "select_noise"),
+    ("select_vpm", "B", "select_vpm"),
+    ("select_user", "B", "select_user"),
+    ("shape_noise", "<H", "shape_noise"),
+    ("shape_vpm", "<H", "shape_vpm"),
+    ("shape_user", "<H", "shape_user"),
+    ("shift_shape_noise", "<H", 0),
+    # 50
+    ("shift_shape_vpm", "<H", "shift_shape_vpm"),
+    ("shift_shape_user", "<H", "shift_shape_user"),
+    ("vco_1_level", "<H", "vco_1_level"),
+    ("vco_2_level", "<H", "vco_2_level"),
+    ("multi_level", "<H", "multi_level"),
+    ("cutoff", "<H", "cutoff"),
+    ("resonance", "<H", "resonance"),
+    ("cutoff_drive", "B", "cutoff_drive"),
+    ("cutoff_keyboard_track", "B", "cutoff_keyboard_track"),
+    ("amp_eg_attack", "<H", "amp_eg_attack"),
+    ("amp_eg_decay", "<H", "amp_eg_decay"),
+    ("amp_eg_sustain", "<H", "amp_eg_sustain"),
+    ("amp_eg_release", "<H", "amp_eg_release"),
+    ("eg_attack", "<H", "eg_attack"),
+    ("eg_decay", "<H", "eg_decay"),
+    ("eg_int", "<H", fn_prologue_eg_int),
+    ("eg_target", "B", fn_prologue_eg_target),
+    ("lfo_wave", "B", "lfo_wave"),
+    ("lfo_mode", "B", fn_prologue_lfo_mode),
+    ("lfo_rate", "<H", "lfo_rate"),
+    ("lfo_int", "<H", "lfo_int"),
+    ("lfo_target", "B", "lfo_target"),
+    ("mod_fx_on_off", "B", "mod_fx_on_off"),
+    ("mod_fx_type", "B", "mod_fx_type"),
+    ("mod_fx_chorus", "B", "mod_fx_chorus"),
+    ("mod_fx_ensemble", "B", "mod_fx_ensemble"),
+    ("mod_fx_phaser", "B", "mod_fx_phaser"),
+    ("mod_fx_flanger", "B", "mod_fx_flanger"),
+    ("mod_fx_user", "B", "mod_fx_user"),
+    ("mod_fx_time", "<H", "mod_fx_time"),
+    ("mod_fx_depth", "<H", "mod_fx_depth"),
+    ("delay_on_off", "B", fn_prologue_delay_on_off),
+    # 100
+    ("delay_sub_type", "B", "delay_sub_type"),
+    ("delay_time", "<H", "delay_reverb_time"),
+    ("delay_depth", "<H", "delay_reverb_depth"),
+    ("reverb_on_off", "B", fn_prologue_reverb_on_off),
+    ("reverb_sub_type", "B", "reverb_sub_type"),
+    ("reverb_time", "<H", "delay_reverb_time"),
+    ("reverb_depth", "<H", "delay_reverb_depth"),
+    ("bend_range_plus", "B", "bend_range_plus"),
+    ("bend_range_minus", "B", "bend_range_minus"),
+    ("joystick_assign_plus", "B", fn_mod_wheel_assign),
+    ("joystick_range_plus", "B", 200),
+    ("joystick_assign_minus", "B", fn_e_pedal_assign),
+    ("joystick_range_minus", "B", 200),
+    ("cv_in_mode", "B", 0),
+    ("cv_in_1_assign", "B", 0),
+    ("cv_in_1_range", "B", 100),
+    ("cv_in_2_assign", "B", 0),
+    ("cv_in_2_range", "B", 100),
+    ("micro_tuning", "B", "micro_tuning"),
+    ("scale_key", "B", "scale_key"),
+    ("program_tuning", "B", "program_tuning"),
+    ("lfo_key_sync", "B", "lfo_key_sync"),
+    ("lfo_voice_sync", "B", "lfo_voice_sync"),
+    ("lfo_target_osc", "B", "lfo_target_osc"),
+    ("cutoff_velocity", "B", "cutoff_velocity"),
+    ("amp_velocity", "B", "amp_velocity"),
+    ("multi_octave", "B", "multi_octave"),
+    ("multi_routing", "B", "multi_routing"),
+    ("eg_legato", "B", "eg_legato"),
+    ("portamento_mode", "B", "portamento_mode"),
+    ("portamento_bpm_sync", "B", 0),
+    ("program_level", "B", "program_level"),
+    ("vpm_param1_feedback", "B", "vpm_param1_feedback"),
+    ("vpm_param2_noise_depth", "B", "vpm_param2_noise_depth"),
+    ("vpm_param3_shapemodint", "B", "vpm_param3_shapemodint"),
+    ("vpm_param4_mod_attack", "B", "vpm_param4_mod_attack"),
+    ("vpm_param5_mod_decay", "B", "vpm_param5_mod_decay"),
+    ("vpm_param6_modkeytrack", "B", "vpm_param6_modkeytrack"),
+    ("user_param1", "B", "user_param1"),
+    ("user_param2", "B", "user_param2"),
+    ("user_param3", "B", "user_param3"),
+    ("user_param4", "B", "user_param4"),
+    ("user_param5", "B", "user_param5"),
+    ("user_param6", "B", "user_param6"),
+    ("user_param1_2_3_4_type", "B", "user_param1_2_3_4_type"),
+    ("user_param1_2_3_4_type", "B", "user_param1_2_3_4_type"),
+    # 150
+    ("program_transpose", "B", "program_transpose"),
+    ("delay_dry_wet", "<H", "delay_reverb_dry_wet"),  # 50% wet/dry
+    ("reverb_dry_wet", "<H", "delay_reverb_dry_wet"),  # 50% wet/dry
+    ("midi_after_touch_assign", "B", fn_midi_after_touch_assign),
+    ("str_PRED", "4s", fn_str_pred),
+    ("str_SQ", "2s", fn_str_sq),
+    ("step_1_16_active_step", "<H", 0),
+#    ("bpm", "<H", fn_bmp),
+    ("bpm", "<H", "bpm"),
+    ("step_length", "B", 0),
+    ("step_resolution", "B", 0),
+    ("swing", "B", 0),
+    ("default_gate_time", "B", 0),
+    ("step1_16", "<H", 0),
+    ("step1_16_motion", "<H", 0),
+    ("motion_slot_1_0_parameter", "B", 0),
+    ("motion_slot_1_1_parameter", "B", 0),
+    ("motion_slot_2_0_parameter", "B", 0),
+    ("motion_slot_2_1_parameter", "B", 0),
+    ("motion_slot_3_0_parameter", "B", 0),
+    ("motion_slot_3_1_parameter", "B", 0),
+    ("motion_slot_4_0_parameter", "B", 0),
+    ("motion_slot_4_1_parameter", "B", 0),
+    ("motion_slot_1_step1_16", "<H", 0),
+    ("motion_slot_2_step1_16", "<H", 0),
+    ("motion_slot_3_step1_16", "<H", 0),
+    ("motion_slot_4_step1_16", "<H", 0),
+    # 1900
+    ("step_01_event_data", "52s", fn_empty_step_data),
+    ("step_02_event_data", "52s", fn_empty_step_data),
+    ("step_03_event_data", "52s", fn_empty_step_data),
+    ("step_04_event_data", "52s", fn_empty_step_data),
+    ("step_05_event_data", "52s", fn_empty_step_data),
+    ("step_06_event_data", "52s", fn_empty_step_data),
+    ("step_07_event_data", "52s", fn_empty_step_data),
+    ("step_08_event_data", "52s", fn_empty_step_data),
+    ("step_09_event_data", "52s", fn_empty_step_data),
+    ("step_10_event_data", "52s", fn_empty_step_data),
+    ("step_11_event_data", "52s", fn_empty_step_data),
+    ("step_12_event_data", "52s", fn_empty_step_data),
+    ("step_13_event_data", "52s", fn_empty_step_data),
+    ("step_14_event_data", "52s", fn_empty_step_data),
+    ("step_15_event_data", "52s", fn_empty_step_data),
+    ("step_16_event_data", "52s", fn_empty_step_data),
+    # 1022
+    ("arp_gate_time", "B", 0),
+    ("arp_rate", "B", "arp_rate"),   # **
+    ),
+    "monologue":(
+    # 0
+    ("str_PROG", "4s", "str_PROG"),
+    ("program_name", "12s", "program_name"),
+    ("octave", "B", "keyboard_octave"),
+    ("portamento", "B", fn_portamento_time),
+    ("key_trig", "B", 0),
+    ("voice_mode_depth", "<H", 0),
+    ("voice_mode_type", "B", 4),
+    ("vco_1_wave", "B", "vco_1_wave"),
+    ("vco_1_octave", "B", "vco_1_octave"),
+    ("vco_1_pitch", "<H", "vco_1_pitch"),
+    ("vco_1_shape", "<H", "vco_1_shape"),
+    ("vco_2_wave", "B", "vco_2_wave"),
+    ("vco_2_octave", "B", fn_vco_2_octave),
+    ("vco_2_pitch", "<H", fn_vco_2_pitch),
+    ("vco_2_shape", "<H", fn_vco_2_shape),
+    ("sync", "B", fn_sync),
+    ("ring", "B", fn_ring),
+    ("cross_mod_depth", "<H", 0),
+    ("multi_type", "B", 0),
+    ("select_noise", "B", 1),
+    ("select_vpm", "B", 6),
+    ("select_user", "B", 0),
+    ("shape_noise", "<H", 1),
+    ("shape_vpm", "<H", 6),
+    ("shape_user", "<H", 0),
+    ("shift_shape_noise", "<H", 0),
+    # 50
+    ("shift_shape_vpm", "<H", 0),
+    ("shift_shape_user", "<H", 0),
+    ("vco_1_level", "<H", "vco_1_level"),
+    ("vco_2_level", "<H", fn_vco_2_level),
+    ("multi_level", "<H", fn_multi_level),
+    ("cutoff", "<H", "cutoff"),
+    ("resonance", "<H", "resonance"),
+    ("cutoff_drive", "B", fn_drive),
+    ("cutoff_keyboard_track", "B", "cutoff_kbd_track"),
+    ("amp_eg_attack", "<H", fn_amp_eg_attack),
+    ("amp_eg_decay", "<H", fn_amp_eg_decay),
+    ("amp_eg_sustain", "<H", fn_amp_eg_sustain),
+    ("amp_eg_release", "<H", fn_amp_eg_release),
+    ("eg_attack", "<H", "eg_attack"),
+    ("eg_decay", "<H", "eg_decay"),
+    ("eg_int", "<H", "eg_int"),
+    ("eg_target", "B", "eg_target"),
+    ("lfo_wave", "B", "lfo_type"),
+    ("lfo_mode", "B", fn_molg_lfo_mode),
+    ("lfo_rate", "<H", "lfo_rate"),
+    ("lfo_int", "<H", "lfo_int"),
+    ("lfo_target", "B", "lfo_target"),
+    ("mod_fx_on_off", "B", 0),
+    ("mod_fx_type", "B", 0),
+    ("mod_fx_chorus", "B", 0),
+    ("mod_fx_ensemble", "B", 0),
+    ("mod_fx_phaser", "B", 0),
+    ("mod_fx_flanger", "B", 0),
+    ("mod_fx_user", "B", 0),
+    ("mod_fx_time", "<H", 0),
+    ("mod_fx_depth", "<H", 0),
+    ("delay_on_off", "B", 0),
+    # 100
+    ("delay_sub_type", "B", 3),
+    ("delay_time", "<H", 0),
+    ("delay_depth", "<H", 0),
+    ("reverb_on_off", "B", 0),
+    ("reverb_sub_type", "B", 0),
+    ("reverb_time", "<H", 0),
+    ("reverb_depth", "<H", 0),
+    ("bend_range_plus", "B", "bend_range_plus"),
+    ("bend_range_minus", "B", "bend_range_minus"),
+    ("joystick_assign_plus", "B", fn_slider),
+    ("joystick_range_plus", "B", fn_bend_range_plus),
+    ("joystick_assign_minus", "B", fn_slider),
+    ("joystick_range_minus", "B", fn_bend_range_minus),
+    ("cv_in_mode", "B", 0),
+    ("cv_in_1_assign", "B", 0),
+    ("cv_in_1_range", "B", 100),
+    ("cv_in_2_assign", "B", 0),
+    ("cv_in_2_range", "B", 100),
+    ("micro_tuning", "B", 0),
+    ("scale_key", "B", 12),
+    ("program_tuning", "B", 50),
+    ("lfo_key_sync", "B", 0),
+    ("lfo_voice_sync", "B", 0),
+    ("lfo_target_osc", "B", 0),
+    ("cutoff_velocity", "B", fn_cutoff_velocity),
+    ("amp_velocity", "B", "amp_velocity"),
+    ("multi_octave", "B", fn_molg_multi_octave),
+    ("multi_routing", "B", 0),
+    ("eg_legato", "B", fn_eg_legato),
+    ("portamento_mode", "B", "portamento_mode"),
+    ("portamento_bpm_sync", "B", 0),
+    ("program_level", "B", 102),
+    ("vpm_param1_feedback", "B", 199),
+    ("vpm_param2_noise_depth", "B", 199),
+    ("vpm_param3_shapemodint", "B", 199),
+    ("vpm_param4_mod_attack", "B", 199),
+    ("vpm_param5_mod_decay", "B", 199),
+    ("vpm_param6_modkeytrack", "B", 199),
+    ("user_param1", "B", 0),
+    ("user_param2", "B", 0),
+    ("user_param3", "B", 0),
+    ("user_param4", "B", 0),
+    ("user_param5", "B", 0),
+    ("user_param6", "B", 0),
+    ("user_param5_6_r_r_type", "B", 0),
+    ("user_param1_2_3_4_type", "B", 0),
+    # 150
+    ("program_transpose", "B", 13),
+    ("delay_dry_wet", "<H", 512),  # 50% wet/dry
+    ("reverb_dry_wet", "<H", 512),  # 50% wet/dry
+    ("midi_after_touch_assign", "B", 12),
+    ("str_PRED", "4s", fn_str_pred),
+    ("str_SQ", "2s", fn_str_sq),
+    ("step_1_16_active_step", "<H", 65535),
+    ("bpm", "<H", "bpm"),
+    ("step_length", "B", "step_length"),
+    ("step_resolution", "B", "step_resolution"),
+    ("swing", "B", "swing"),
+    ("default_gate_time", "B", "default_gate_time"),
+    ("step1_16", "<H", "step1_16"),
+    ("step1_16_motion", "<H", "step1_16_motion"),  # I think this is the corresponding param
+    ("motion_slot_1_0_parameter", "B", "motion_slot_1_0_parameter"),
+    ("motion_slot_1_1_parameter", "B", fn_molg_motion_slot_1_parameter),
+    ("motion_slot_2_0_parameter", "B", "motion_slot_2_0_parameter"),
+    ("motion_slot_2_1_parameter", "B", fn_molg_motion_slot_2_parameter),
+    ("motion_slot_3_0_parameter", "B", "motion_slot_3_0_parameter"),
+    ("motion_slot_3_1_parameter", "B", fn_molg_motion_slot_3_parameter),
+    ("motion_slot_4_0_parameter", "B", "motion_slot_4_0_parameter"),
+    ("motion_slot_4_1_parameter", "B", fn_molg_motion_slot_4_parameter),
+    ("motion_slot_1_step1_16", "<H", "motion_slot_1_step1_16"),
+    ("motion_slot_2_step1_16", "<H", "motion_slot_2_step1_16"),
+    ("motion_slot_3_step1_16", "<H", "motion_slot_3_step1_16"),
+    ("motion_slot_4_step1_16", "<H", "motion_slot_4_step1_16"),
+    # 1900
+    ("step_01_event_data", "52s", fn_molg_step_01_event_data),
+    ("step_02_event_data", "52s", fn_molg_step_02_event_data),
+    ("step_03_event_data", "52s", fn_molg_step_03_event_data),
+    ("step_04_event_data", "52s", fn_molg_step_04_event_data),
+    ("step_05_event_data", "52s", fn_molg_step_05_event_data),
+    ("step_06_event_data", "52s", fn_molg_step_06_event_data),
+    ("step_07_event_data", "52s", fn_molg_step_07_event_data),
+    ("step_08_event_data", "52s", fn_molg_step_08_event_data),
+    ("step_09_event_data", "52s", fn_molg_step_09_event_data),
+    ("step_10_event_data", "52s", fn_molg_step_10_event_data),
+    ("step_11_event_data", "52s", fn_molg_step_11_event_data),
+    ("step_12_event_data", "52s", fn_molg_step_12_event_data),
+    ("step_13_event_data", "52s", fn_molg_step_13_event_data),
+    ("step_14_event_data", "52s", fn_molg_step_14_event_data),
+    ("step_15_event_data", "52s", fn_molg_step_15_event_data),
+    ("step_16_event_data", "52s", fn_molg_step_16_event_data),
+    # 1022
+    ("arp_gate_time", "B", "default_gate_time"),
+    ("arp_rate", "B", 5),   # **
+    )
+}
 
 favorite_template = """\
 <?xml version="1.0" encoding="UTF-8"?>
