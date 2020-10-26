@@ -160,16 +160,16 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
 
             if input_file.suffix != ".syx":
                 if flavour == 'og': 
-                    raw_og_patch = common.parse_patchdata(patchdata)
-                    patch = og.normalise_og_patch(raw_og_patch)
+                    raw_patch = common.parse_patchdata(patchdata)
+                    patch = og.normalise_og_patch(raw_patch)
                     patch_xd, patchdata = convert_to_xd(patch, flavour)
                 elif flavour == 'prologue':
-                    raw_og_patch = common.parse_patchdata(patchdata)
-                    patch = prologue.normalise_patch(raw_og_patch)
+                    raw_patch = common.parse_patchdata(patchdata)
+                    patch = prologue.normalise_patch(raw_patch)
                     patch_xd, patchdata = convert_to_xd(patch, flavour)
                 elif flavour == 'monologue':
-                    raw_og_patch = common.parse_patchdata(patchdata)
-                    patch = monologue.normalise_patch(raw_og_patch)
+                    raw_patch = common.parse_patchdata(patchdata)
+                    patch = monologue.normalise_patch(raw_patch)
                     patch_xd, patchdata = convert_to_xd(patch, flavour)
 
             # .prog_bin record/file

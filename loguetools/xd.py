@@ -608,6 +608,10 @@ the forms
 
 """
 patch_struct = {
+    # The "og" structure here is used both to decode xd patches and to translate from
+    # the og. It shouldn't get special treatment in the code, but it does for the
+    # historic reason that originally loguetools could only translate from the og.
+    # I should probably clean this up in the future.
     "og":(
     # 0
     ("str_PROG", "4s", "str_PROG"),

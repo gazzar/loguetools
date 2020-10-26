@@ -31,10 +31,25 @@ def test_og_patch_dump_by_name():
 
 def test_xd_patch_dump():
     result = runner.invoke(
-        click_dump, ["./loguetools/tests/xd_orig/LectroFlute.mnlgxdprog"]
+        click_dump, "./loguetools/tests/xd_orig/LectroFlute.mnlgxdprog"
     )
     assert result.exit_code == 0
     # assert result.output == "configure"
+
+
+def test_xd_patch_dump_md5():
+    result = runner.invoke(
+        click_dump, "./loguetools/tests/xd_orig/LectroFlute.mnlgxdprog -m"
+    )
+    assert result.exit_code == 0
+
+
+def test_xd_patch_dump_verbose():
+    result = runner.invoke(
+        click_dump, "./loguetools/tests/xd_orig/LectroFlute.mnlgxdprog -v"
+    )
+    assert result.exit_code == 0
+
 
 def test_xd_patch_dump_by_ident():
     result = runner.invoke(
