@@ -87,14 +87,20 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
 
     """
     input_file = pathlib.Path(filename)
-    assert input_file.suffix in {".mnlgprog", ".mnlgpreset", ".mnlglib", ".prlgprog", ".prlgpreset", ".prlglib", ".molgprog", ".molgpreset", ".molglib", ".syx"}
+    assert input_file.suffix in {
+        ".mnlgprog", ".mnlgpreset", ".mnlglib",
+        ".prlgprog", ".prlgpreset", ".prlglib",
+        ".molgprog", ".molgpreset", ".molglib",
+        ".mnlgxdpreset", ".mnlgxdlib",
+        ".syx"
+    }
 
     if input_file.suffix != ".syx":
         out_flavour = "xd"
         zipobj = ZipFile(filename, "r", compression=ZIP_DEFLATED, compresslevel=9)
         proglist = common.zipread_progbins(zipobj)
 
-    if input_file.suffix == ".mnlgprog":
+    if input_file.suffix in {".mnlgprog", ".syx"}:
         # single patch/program
         match_name = input_file
         match_ident = 1

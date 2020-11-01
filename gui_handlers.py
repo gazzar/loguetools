@@ -152,9 +152,16 @@ class MyFrame(MainFrame):
                     common.file_type(pathlib.Path(self.file).suffix)
                 if self.is_a_collection:
                     self.toolbar.EnableTool(wx.ID_SAVE, True)
-                if self.logue_type == "og":
+                if self.logue_type in {"prologue", "og"}:
                     self.toolbar.EnableTool(wx.ID_FILE1, True)
                     self.toolbar.EnableTool(wx.ID_FILE2, True)
+                if self.logue_type == "xd":
+                    suffix = pathlib.Path(self.file).suffix
+                    assert suffix in {".mnlgxdlib", ".mnlgxdpreset"}
+                    if suffix == ".mnlgxdlib":
+                        self.toolbar.EnableTool(wx.ID_FILE2, True)
+                    else:
+                        self.toolbar.EnableTool(wx.ID_FILE1, True)
                 self.statusBar.SetStatusText(f"Loaded {self.file}")
         except IOError:
             wx.LogError("Cannot open file '%s'." % pathname)
