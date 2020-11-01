@@ -58,10 +58,15 @@ class MyFrame(MainFrame):
             wx.NullBitmap, wx.ITEM_NORMAL, u"Open Pack",
             u"Open Pack - Open a Patch library", None)
         self.tool_translate = self.toolbar.AddLabelTool(
-            wx.ID_CONVERT, u"translate",
-            wx.Bitmap(resource_path(u"icons/convert_gray_to_color.ico"), wx.BITMAP_TYPE_ANY),
-            wx.NullBitmap, wx.ITEM_NORMAL, u"Translate Pack",
-            u"Translate Pack - Convert a minilogue pack to work on the minilogue xd", None)
+            wx.ID_FILE1, u"tolib",
+            wx.Bitmap(resource_path(u"icons/compile_warning.ico"), wx.BITMAP_TYPE_ANY),
+            wx.NullBitmap, wx.ITEM_NORMAL, u"Translate to Lib",
+            u"Translate Pack - Convert to minilogue xd and save as lib", None)
+        self.tool_translate_to_presets = self.toolbar.AddLabelTool(
+            wx.ID_FILE2, u"topresets",
+            wx.Bitmap(resource_path(u"icons/compile_error.ico"), wx.BITMAP_TYPE_ANY),
+            wx.NullBitmap, wx.ITEM_NORMAL, u"Translate to Preset Pack",
+            u"Translate Pack - Convert to minilogue xd and save as preset pack", None)
         self.tool_explode = self.toolbar.AddLabelTool(
             wx.ID_SAVE, u"tool",
             wx.Bitmap(resource_path(u"icons/document_tree.ico"), wx.BITMAP_TYPE_ANY),
@@ -80,11 +85,13 @@ class MyFrame(MainFrame):
         # Connect Events
         self.Bind(wx.EVT_TOOL, self.OnLoadFile, id=self.tool_load.GetId())
         self.Bind(wx.EVT_TOOL, self.OnTranslate, id=self.tool_translate.GetId())
+        self.Bind(wx.EVT_TOOL, self.OnTranslateToPresets, id=self.tool_translate_to_presets.GetId())
         self.Bind(wx.EVT_TOOL, self.OnExplode, id=self.tool_explode.GetId())
         self.Bind(wx.EVT_TOOL, self.OnDump, id=self.tool_dump.GetId())
         self.Bind(wx.EVT_TOOL, self.OnExit, id=self.tool_exit.GetId())
 
-        self.toolbar.EnableTool(wx.ID_CONVERT, False)       # translate
+        self.toolbar.EnableTool(wx.ID_FILE1, False)       # translate to lib
+        self.toolbar.EnableTool(wx.ID_FILE2, False)       # translate to preset pack
         self.toolbar.EnableTool(wx.ID_SAVE, False)          # explode
         self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, False)  # dump
 
@@ -137,7 +144,8 @@ class MyFrame(MainFrame):
             with open(pathname, 'r') as fileobj:
                 self.LoadData(fileobj)
                 self.file = fileobj.name
-                self.toolbar.EnableTool(wx.ID_CONVERT, False)
+                self.toolbar.EnableTool(wx.ID_FILE1, False)
+                self.toolbar.EnableTool(wx.ID_FILE2, False)
                 self.toolbar.EnableTool(wx.ID_SAVE, False)
                 self.toolbar.EnableTool(wx.ID_VIEW_DETAILS, False)
                 self.logue_type, self.is_a_collection = \
@@ -145,7 +153,8 @@ class MyFrame(MainFrame):
                 if self.is_a_collection:
                     self.toolbar.EnableTool(wx.ID_SAVE, True)
                 if self.logue_type == "og":
-                    self.toolbar.EnableTool(wx.ID_CONVERT, True)
+                    self.toolbar.EnableTool(wx.ID_FILE1, True)
+                    self.toolbar.EnableTool(wx.ID_FILE2, True)
                 self.statusBar.SetStatusText(f"Loaded {self.file}")
         except IOError:
             wx.LogError("Cannot open file '%s'." % pathname)
@@ -188,6 +197,10 @@ class MyFrame(MainFrame):
     def OnTranslate(self, event):
         unskip_init = self.m_checkBox_inits.GetValue()
         translate(self.file, None, None, None, unskip_init, False)
+
+    def OnTranslateToPresets(self, event):
+        unskip_init = self.m_checkBox_inits.GetValue()
+        translate(self.file, None, None, None, unskip_init, True)
 
     def OnExplode(self, event):
         prepend_id = self.m_checkBox_id.GetValue()
