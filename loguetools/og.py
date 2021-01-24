@@ -556,4 +556,72 @@ Minilogue OG
 |428~447|       |         |  Step 16 Event Data                *note S4 |
 +-------+-------+---------+---------------------------------------------+
 
+This is the table of Slider Assignment destinations, in Korg's MIDI Implementation rev1 document.
+It seems to be total rubbish. See the table following this one for corrected values.
+*note P13 (Slider Assign)
+    0 : PITCH BEND
+    1 : GATE TIME
+    2 : VCO 1 PITCH
+    3 : VCO 1 SHAPE
+    4 : VCO 2 PITCH
+    5 : VCO 2 SHAPE
+    6 : CROSS MOD DEPTH
+    7 : VCO 2 PITCH EG INT
+    8 : VCO 1 LEVEL
+    9 : VCO 2 LEVEL
+   10 : NOISE LEVEL
+   11 : CUTOFF
+   12 : RESONANCE
+   13 : FILTER EG INT
+   14 : AMP EG ATTACK
+   15 : AMP EG DECAY
+   16 : AMP EG SUSTAIN
+   17 : AMP EG RELEASE
+   18 : EG ATTACK
+   19 : EG DECAY
+   20 : EG SUSTAIN
+   21 : EH RELEASE
+   22 : LFO RATE
+   23 : LFO INT
+   24 : DELAY HI PASS CUTOFF
+   25 : DELAY TIME
+   26 : DELAY FEEDBACK
+   27 : Portament Time
+   28 : VOICE MODE DEPTH
+
+
+The following table of Slider Assignment destinations is based on Jeff Kistler's implementation in
+his minilogue editor here:
+https://github.com/jeffkistler/minilogue-editor/blob/c864768866680f3cf958d00c20cc240df00208de/src/minilogue/display.js#L541
+
+    77: 'Pitch Bend'
+    78: 'Gate Time'
+    17: 'VCO1 Pitch'
+    18: 'VCO1 Shape'
+    21: 'VCO2 Pitch'
+    22: 'VCO2 Shape'
+    25: 'Cross Mod Depth'
+    26: 'VCO2 Pitch EG Int'
+    29: 'VCO1 Level'
+    30: 'VCO2 Level'
+    31: 'Noise Level'
+    32: 'Cutoff'
+    33: 'Resonance'
+    34: 'Filter EG Int'
+    40: 'Amp EG Attack'
+    41: 'Amp EG Decay'
+    42: 'Amp EG Sustain'
+    43: 'Amp EG Release'
+    44: 'EG Attack'
+    45: 'EG Decay'
+    46: 'EG Sustain'
+    47: 'EG Release'
+    48: 'LFO Rate'
+    49: 'LFO Int'
+    56: 'Delay Hi Pass Cutoff'
+    57: 'Delay Time'
+    58: 'Delay Feedback'
+    59: 'Portamento Time'
+    71: 'Voice Mode Depth'
+
 """

@@ -12,37 +12,35 @@ def twos_comp(val, bits):
 
 
 og_slider_to_xd = {
-    0: 12, # PITCH BEND. This is taken care of by +/-x on the xd so I default to filter EG.
-    1:  0, # GATE TIME
-    2:  3, # VCO 1 PITCH
-    3:  4, # VCO 1 SHAPE
-    4:  5, # VCO 2 PITCH
-    5:  6, # VCO 2 SHAPE
-    6:  7, # CROSS MOD DEPTH
-    7:  5, # VCO 2 PITCH EG INT
-    8:  9, # VCO 1 LEVEL
-    9: 10, # VCO 2 LEVEL
-   10: 11, # NOISE LEVEL
-   11: 12, # CUTOFF
-   12: 13, # RESONANCE
-   13: 20, # FILTER EG INT
-   14: 14, # AMP EG ATTACK
-   15: 15, # AMP EG DECAY
-   16: 16, # AMP EG SUSTAIN
-   17: 17, # AMP EG RELEASE
-   18: 18, # EG ATTACK
-   19: 19, # EG DECAY
-   20: 18, # EG SUSTAIN
-   21: 19, # EH RELEASE
-   22: 21, # LFO RATE
-   23: 22, # LFO INT
-   24: 12, # DELAY HI PASS CUTOFF
-   25: 27, # DELAY TIME
-   26: 28, # DELAY FEEDBACK
-   27:  1, # Portament Time
-   28:  2, # VOICE MODE DEPTH
-   77: 12, # PITCH BEND alt.
-   78:  0, # GATE TIME alt.
+   17:  3, # VCO 1 PITCH
+   18:  4, # VCO 1 SHAPE
+   21:  5, # VCO 2 PITCH
+   22:  6, # VCO 2 SHAPE
+   25:  7, # CROSS MOD DEPTH
+   26:  5, # VCO 2 PITCH EG INT
+   29:  9, # VCO 1 LEVEL
+   30: 10, # VCO 2 LEVEL
+   31: 11, # NOISE LEVEL
+   32: 12, # CUTOFF
+   33: 13, # RESONANCE
+   34: 20, # FILTER EG INT
+   40: 14, # AMP EG ATTACK
+   41: 15, # AMP EG DECAY
+   42: 16, # AMP EG SUSTAIN
+   43: 17, # AMP EG RELEASE
+   44: 18, # EG ATTACK
+   45: 19, # EG DECAY
+   46: 18, # EG SUSTAIN
+   47: 19, # EH RELEASE
+   48: 21, # LFO RATE
+   49: 22, # LFO INT
+   56: 12, # DELAY HI PASS CUTOFF
+   57: 27, # DELAY TIME
+   58: 28, # DELAY FEEDBACK
+   59:  1, # Portament Time
+   71:  2, # VOICE MODE DEPTH
+   77: 22, # PITCH BEND. Always available on +/-x on the xd, so default +y to LFO INT instead.
+   78:  0, # GATE TIME
 }
 
 prologue_mod_wheel_to_xd = {
@@ -133,7 +131,7 @@ molg_slider_to_xd = {
     31: 21, # LFO RATE
     32: 22, # LFO INT
     40:  1, # Portament Time
-    56: 12, # PITCH BEND. This is taken care of by +/-x on the xd so I default to filter EG.
+    56: 22, # PITCH BEND. Always available on +/-x on the xd, so default +y to LFO INT instead.
     57:  0, # GATE TIME
 }
 
@@ -222,15 +220,15 @@ fn_molg_motion_slot_2_parameter = lambda src: molg_motion_to_xd.get(src.motion_s
 fn_molg_motion_slot_3_parameter = lambda src: molg_motion_to_xd.get(src.motion_slot_3_1_parameter, 0)
 fn_molg_motion_slot_4_parameter = lambda src: molg_motion_to_xd.get(src.motion_slot_4_1_parameter, 0)
 
-fn_slider_right = lambda src: og_slider_to_xd.get(src.slider_assign, 12)
-fn_slider_left = lambda src: og_slider_to_xd.get(src.slider_assign, 12)
+fn_slider_right = lambda src: og_slider_to_xd.get(src.slider_assign, 22)
+fn_slider_left = lambda src: og_slider_to_xd.get(src.slider_assign, 22)
 fn_bend_range_plus = lambda src: int(100 + src.bend_range_plus * 100 / 12)
 fn_bend_range_minus = lambda src: int(100 + src.bend_range_minus * 100 / 12)
 
 fn_midi_after_touch_assign = lambda src: prologue_mod_wheel_to_xd.get(src.midi_after_touch_assign, 0)
 fn_mod_wheel_assign = lambda src: prologue_mod_wheel_to_xd.get(src.mod_wheel_assign, 0)
 fn_e_pedal_assign = lambda src: prologue_e_pedal_to_xd.get(src.e_pedal_assign, 0)
-fn_slider = lambda src: molg_slider_to_xd.get(src.slider_assign, 0)
+fn_slider = lambda src: molg_slider_to_xd.get(src.slider_assign, 22)
 
 # Simple translation functions
 fn_delay_on_off = lambda src: 0 if src.delay_output_routing == 0 else 1
