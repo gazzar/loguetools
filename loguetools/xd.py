@@ -470,9 +470,8 @@ def eg_and_lfo_mapping(src):
     # Sort EG and LFO amounts
     resourcepool = {'eg_to_cutoff':c, 'eg_to_pitch':d, 'lfo':e}
     resources = sorted(resourcepool, key=resourcepool.get)
-    # remove lowest priority, prioritising lfo lowest in the case of equality
-    if resourcepool[resources[0]] == resourcepool['lfo']:
-        resources.remove('lfo')
+    if resourcepool[resources[1]] < 0.1 and resources[1] != 'lfo':
+        resources.pop(1)
     else:
         resources.pop(0)
 
