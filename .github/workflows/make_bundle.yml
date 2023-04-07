@@ -20,7 +20,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: '3.10'
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
@@ -39,19 +39,19 @@ jobs:
       - name: Create and Build Bundle
         run: pyinstaller --clean main.spec
       - name: Upload Artifact for Linux
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: runner.os == 'Linux'
         with:
           name: loguetools-${{ runner.os }}
           path: "**/dist/**"
       - name: Upload Artifact for MacOS
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: runner.os == 'MacOS'
         with:
           name: loguetools-${{ runner.os }}
           path: "**/dist/**"
       - name: Upload Artifact for Windows
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: runner.os == 'Windows'
         with:
           name: loguetools-${{ runner.os }}
