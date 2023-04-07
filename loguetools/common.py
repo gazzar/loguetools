@@ -306,15 +306,6 @@ def patch_ident(data):
 
     try:
         struct.unpack_from("B", data, offset=447)
-        if struct.unpack_from("4s", data, offset=0x30)[0].decode('ansi') == 'SEQD':
-            return "monologue", hash
-        else:
-            return "og", hash
-    except struct.error:
-        pass
-
-    try:
-        struct.unpack_from("B", data, offset=447)
         # if we didn't raise an exception by this point, it's an og or monologue
         if is_init_patch("monologue", hash):
             # An incorrectly initialised monologue Init Program patch
