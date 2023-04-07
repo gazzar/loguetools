@@ -1,11 +1,9 @@
 import os
 import sys
 import pathlib
-import hashlib
 import textwrap
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
-import data
 import wx
 import wx.adv
 from loguetools import version
@@ -179,8 +177,7 @@ class MyFrame(MainFrame):
         lc.SetColumnWidth(2, 50)
         for i, p in enumerate(self.proglist):
             patchdata = self.zipobj.read(p)
-            hash = hashlib.md5(patchdata).hexdigest()
-            flavour = common.patch_type(patchdata)
+            flavour, hash = common.patch_ident(patchdata)
             if not common.is_init_patch(flavour, hash):
                 prgname = common.program_name(patchdata, flavour)
                 lc.Append([i+1, prgname, hash[:4]])
@@ -197,24 +194,27 @@ class MyFrame(MainFrame):
         prgname = self.listCtrl.GetItemText(item, col=1)
         print(f"{prgname}")
         patchdata = self.zipobj.read(self.proglist[item])
-        print(common.flavour_to_product[common.patch_type(patchdata)] + " patch")
+        print(common.flavour_to_product[common.patch_ident(patchdata)[0]] + " patch")
         dump.print_patch(patchdata)
         print_sep()
 
     def OnTranslate(self, event):
         unskip_init = self.m_checkBox_inits.GetValue()
-        translate(self.file, None, None, None, unskip_init, False)
+        skip_factory = self.m_checkBox_factory.GetValue()
+        translate(self.file, None, None, None, unskip_init, skip_factory, False)
 
     def OnTranslateToPresets(self, event):
         unskip_init = self.m_checkBox_inits.GetValue()
-        translate(self.file, None, None, None, unskip_init, True)
+        skip_factory = self.m_checkBox_factory.GetValue()
+        translate(self.file, None, None, None, unskip_init, skip_factory, True)
 
     def OnExplode(self, event):
         prepend_id = self.m_checkBox_id.GetValue()
         append_md5_4 = self.m_checkBox_md5.GetValue()
         append_version = self.m_checkBox_version.GetValue()
         unskip_init = self.m_checkBox_inits.GetValue()
-        explode(self.file, None, None, prepend_id, append_md5_4, append_version, unskip_init)
+        skip_factory = self.m_checkBox_factory.GetValue()
+        explode(self.file, None, None, prepend_id, append_md5_4, append_version, unskip_init, skip_factory)
 
     def OnExit(self, event):
         """Close the frame, terminating the application."""

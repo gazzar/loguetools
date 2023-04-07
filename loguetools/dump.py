@@ -1,9 +1,6 @@
-import sys
 import click
 import zipfile
-import struct
 from pprint import pprint
-import hashlib
 from loguetools import og, common
 
 
@@ -11,7 +8,7 @@ def print_patch(patchdata):
     import copy
 
     patch = common.parse_patchdata(patchdata)
-    if common.patch_type(patchdata) == "og":
+    if common.patch_ident(patchdata)[0] == "og":
         patch = og.normalise_og_patch(patch)
 
     patchcopy = copy.deepcopy(vars(patch))
@@ -50,14 +47,12 @@ def dump(filename, match_name, match_ident, verbose, md5):
 
     for p in proglist:
         patchdata = zipobj.read(p)
-        flavour = common.patch_type(patchdata)
+        flavour, hash = common.patch_ident(patchdata)
         prgname = common.program_name(patchdata, flavour)
         if common.is_init_program_name(prgname):
             continue
-        checksum = ""
         if md5:
-            checksum = hashlib.md5(patchdata).hexdigest()
-        print(f"{int(p[5:8])+1:03d}: {prgname:12s} {checksum}")
+            print(f"{int(p[5:8])+1:03d}: {prgname:12s} {hash}")
         if verbose:
             print_patch(patchdata)
             print()

@@ -208,3 +208,88 @@ def decode_src_string(src_string):
     if shift > 7:
         shift = -(~shift & 7) - 1  # decode negative part of signed 2's complement
     return src_name, mask, shift
+
+
+factory_presets = """\
+180c3f3e6fbdcaf6615533482088bca0 <afx acid3>
+72719a57f2c949bc68eb6199edcd7152 Injection
+91ef375c689f96f74cf850ad9682ff04 Anfem
+27f560ed0f1c7e6bc5234b4bd481bad0 <wavetable>
+f20bb671b115dd064f87da357f0cfe56 Lu-Fuki
+fe63347344d218e17f1bf3781521873e Fake3OSC
+22afc99dc25c701cc3e6c43b06814a35 Arc Lead   
+e0cd5bcc803a964f5d37633ab00de6fb <Flute>
+4df60cff635237328a91f545a6d2323c Scoooping
+516922632ff1cdd7332ca7672c8015c8 Robot Empire
+097afef62e22d21fe1c8b2c5007ece6d TeeVeeSaw
+55468103540a342cc2463fe2a19f81bc <AFX> bAss 
+6d05864ea32ef83fb9ed5aa23ff4bfdc <model 800>
+644e3bfae19f3fcfd26a31ea695daa4c <epic acid>
+f77dbc7568ae8cd70b7d382a211bd76e Herd Of Crab
+e869d02fcfb69080d56f37be982240de Stonecold
+92ca0d867eac86c6a3f117e625b3c18e Dirty Sub
+03df35eb7dc4c823429cb70338dc6ade Jungle Sub
+429da32166baf866661d5e6471cb6aaa <deep bass>
+dc3f20417692b7c5781c1e48645608df Hoodie Bass
+b95435a40c1f4925f51e95e5c85e459f StabbyBass
+0c31c7a7ef861fb7d04b4cea20b0c7c1 DistortedSqr
+0e8c55f4df179fd11a9c6ea9657b7c43 Werq
+f88fe8afa7fb07e6ef0ae682e479beda <Ratewobble
+3e0e9148ba1ecf89e1cceef989d32ec6 StomachWave
+79c5735b4ec3b643561c6517830d7491 Dr.Juice
+9e2dec4a010d9e71cfd78a9276135531 Rubber Duck
+32034afb67701eb39b76975912769d44 <HarmonBa> 
+97ece84afb73e249bb9a3b21f5a9c0c4 Dark Perc
+c7f8e3a54e8d7f192617d26336c5c126 Jackathon
+9147f4113d3f44912597400071ee663d Bosshog
+3c9c19f7b9b78d7c784e7e63cd08f73d <Ardkore92>
+2a0b7d6bc50141d0be900da23fdf5032 <aliasBass>
+b8015115b65c52c6a08818f664edd9b4 <PWM envBA>
+4ca712033cef3fac38af141f56835661 Disemvowel
+2e94118692bed98581dfa15e456e7775 Kickin'B
+f064e6f84d9836c538a647f4b53b4798 OIOI
+7be3359cbe485c43ac0d65269e51b461 <akunk b>  
+6212e6db045097ed725500d06927663b Dual Saw
+4e0af205343b79fa3a60bec9c895fe32 BitterLead
+80a988854c54a01829030c6c459e01de Syncwave
+eb446a88e09fc6e5e3c2dffbbd912928 <Duophony> 
+fe1545e00f6c674d7a2ce21b83df06fe Mono Brass
+1d9236bdab22e344c4c030a6ca982f9f <5th brASs>
+77fdf12199d8fc606b23eb7cbcb259bb Bouncy Balls
+26e6ed4886d9d40bb43e8800cf3f4254 Ghost Town
+e12c48184b31af53968229f0e7c7e858 Childhood
+b83847e748df46718e30eaf96d7ba93d On the Moon
+d83a7d2e9b2f7bdb563ef1fcdb0ba6c5 <phaseClks>
+a9bc81d7de51ac7165a1cd616b10898a <SyncMtion>
+0a385f731e1a29c889c4e402f25b82d3 <SyncLAM>  
+be0d9e18339a8c7a0dd78927173683ce Arpme Lead
+60f079ff0e7579e877a497ca99fbd22c Squelf
+50151a1211f69236d18b3f6806142bc8 Milky Way
+e9ee01f2816b68356105f7d0f643bb00 BrokenArcade
+88a6567af77ec64a27643173f0031811 <MT-digArp>
+5ba74dc530e2f6e8b132b017ecd8ed37 Chopchoon
+5bd0df85ff1978ca20647238033abc2b FMod Seq
+568aef3852e885b3826112f460e16520 TronIines  
+dba2833ffd5b42a96b8a2c18370f35f8 Tech Stab
+338e14ab201409b749238f5e38b61390 Pumpdriver
+e950093ad8f6a960e1a1509aca88c22b Lfoiled
+e43a98c2551c32edbbdcd31e3fcb0ac5 < Digisnd >
+d9f80e8631f2debeaff1c987c639cd55 <ascension>
+9165a176f1beae1756a8b48062b12590 <centipede>
+702781efa069c988a174097489647278 Robotspeak
+44e854b5c426a26158c1d4edab0fc7c3 Cpu Cycles
+cc9b5625cfbd6613ac706844724b103c Loud Siren
+0c8cb897b502d0b200af569f0cbc9704 Portrythm
+9323d1669689871260e0cbeb5197f886 Dambuster
+1156c0b0a17afc4c5fabab1598c38ff7 <xoc PLAY> 
+1f1cbc6ce3e8afe34d30c2c976b9fefa LittleGlitch
+afd746cbb3099a6ada981188cbe4cc11 Hard Run
+92c54d799e62c701983b293176b66a90 <beat&bass>
+7d6190780551e3532d372af97faa624a <bnsbeats1>
+60136a93b193be9b5e5b3759767fc779 <bnsbeats2>
+9a22e36c7774a194f9a3c455b47d901f <bnsbeats3>
+2f73b823b4e9080608b1543d69b5034c <bnsbeats4>
+f4fcb598813b457af78e921fcf5ebc80 <bnsbeats5>
+4c39f2abcf25898fcd4cf6c22d929ce5 <afx beat> 
+"""
+factory_hashes = [l.split()[0] for l in factory_presets.splitlines()]

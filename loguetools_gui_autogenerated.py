@@ -55,10 +55,15 @@ class MainFrame ( wx.Frame ):
         self.m_checkBox_version.SetToolTip( u"Append loguetools version to filename" )
 
         self.m_toolBar_options.AddControl( self.m_checkBox_version )
-        self.m_checkBox_inits = wx.CheckBox( self.m_toolBar_options, wx.ID_ANY, u"Inits", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_checkBox_inits = wx.CheckBox( self.m_toolBar_options, wx.ID_ANY, u"inits", wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_checkBox_inits.SetToolTip( u"Include patches named Init Program" )
 
         self.m_toolBar_options.AddControl( self.m_checkBox_inits )
+        self.m_checkBox_factory = wx.CheckBox( self.m_toolBar_options, wx.ID_ANY, u"factory", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_checkBox_factory.SetValue(True)
+        self.m_checkBox_factory.SetToolTip( u"Include factory presets when exploding" )
+
+        self.m_toolBar_options.AddControl( self.m_checkBox_factory )
         self.m_toolBar_options.Realize()
 
         checkboxPanelSizer.Add( self.m_toolBar_options, 0, wx.ALL|wx.EXPAND, 0 )

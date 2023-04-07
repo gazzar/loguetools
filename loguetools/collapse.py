@@ -1,11 +1,5 @@
-import sys
 import click
 from zipfile import ZipFile, ZIP_DEFLATED
-from types import LambdaType, FunctionType
-import struct
-from pprint import pprint
-import pathlib
-import re
 from loguetools import common
 import glob
 from os.path import join, split, splitext
@@ -43,7 +37,7 @@ def collapse(filename, unskip_init, force_preset):
         for i, p in enumerate(proglist):
             zipobj = ZipFile(p, "r", compression=ZIP_DEFLATED, compresslevel=9)
             patchdata = zipobj.read(common.zipread_progbins(zipobj)[0])
-            flavour = common.patch_type(patchdata)
+            flavour, hash = common.patch_ident(patchdata)
             if flavor != flavour:
                 # actual patch type did not match with the first one
                 continue

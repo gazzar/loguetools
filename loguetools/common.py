@@ -3,11 +3,20 @@ from xml.dom import minidom
 import struct
 from types import SimpleNamespace
 import fnmatch
-from loguetools import og, xd, prologue, monologue
+from loguetools import og, xd, prologue, monologue, kk
 from loguetools import version
 import hashlib
 import re
-import textwrap
+
+
+valid_flavours = {"xd", "og", "prologue", "monologue", "kk"}
+flavour_to_product = {
+        "xd": "xd",
+        "og": "minilogue",
+        "prologue": "prologue",
+        "monologue": "monologue",
+        "kk": "KingKORG",
+    }
 
 
 class Patch(SimpleNamespace):
@@ -44,6 +53,19 @@ class sanitise_patchname():
         return output_name
 
 
+def is_factory_program(flavour, hash):
+    assert flavour in valid_flavours
+
+    table = {
+        "xd": xd.factory_hashes,
+        "og": og.factory_hashes,
+        "prologue": prologue.factory_hashes,
+        "monologue": monologue.factory_hashes,
+        "kk": kk.factory_hashes,
+    }[flavour]
+    return hash in table
+
+
 init_program_hashes = {
     'og1': '9d2fd7e2e97edc87306d8360eb881534',
     'og2': '3c2611b06c1fbb118269a0d9ca764b34',
@@ -76,16 +98,6 @@ def is_init_patch(flavour, hash):
 
 def is_init_program_name(name):
     return name.replace(' ', '').strip() == "InitProgram"
-
-
-valid_flavours = {"xd", "og", "prologue", "monologue", "kk"}
-flavour_to_product = {
-        "xd": "xd",
-        "og": "minilogue",
-        "prologue": "prologue",
-        "monologue": "monologue",
-        "kk": "KingKORG",
-    }
 
 
 def prog_info_template_xml(flavour, programmer=None, comment=None, copyright=None):
@@ -266,7 +278,7 @@ def file_type(suffix):
     return logue_type, collection
 
 
-def patch_type(data):
+def patch_ident(data):
     """Identify patch data flavour.
     Attempts to distinguish by using a combination of approaches:
     1. Read from locations valid only for some synth flavours.
@@ -282,46 +294,47 @@ def patch_type(data):
 
     Returns:
         str: One of {"xd", "og", "monologue", "prologue", "kk"}
+        hash: md5 hash
 
     """
+    hash = hashlib.md5(data).hexdigest()
     try:
         struct.unpack_from("B", data, offset=1023)
-        return "xd"
+        return "xd", hash
     except struct.error:
         pass
 
     try:
         struct.unpack_from("B", data, offset=447)
         if struct.unpack_from("4s", data, offset=0x30)[0].decode('ansi') == 'SEQD':
-            return "monologue"
+            return "monologue", hash
         else:
-            return "og"
+            return "og", hash
     except struct.error:
         pass
 
     try:
         struct.unpack_from("B", data, offset=447)
         # if we didn't raise an exception by this point, it's an og or monologue
-        hash = hashlib.md5(data).hexdigest()
         if is_init_patch("monologue", hash):
             # An incorrectly initialised monologue Init Program patch
-            return "monologue"
+            return "monologue", hash
         if struct.unpack_from("4s", data, offset=48)[0] == b"SEQD":
-            return "monologue"
+            return "monologue", hash
         if struct.unpack_from("4s", data, offset=96)[0] == b"SEQD":
-            return "og"
+            return "og", hash
     except struct.error:
         pass
 
     try:
         struct.unpack_from("B", data, offset=335)
-        return "prologue"
+        return "prologue", hash
     except struct.error:
         pass
 
     try:
         struct.unpack_from("B", data, offset=319)
-        return "kk"
+        return "kk", hash
     except struct.error:
         pass
 
@@ -343,7 +356,7 @@ def id_from_name(zipobj, name):
     """
     for i, p in enumerate(zipread_progbins(zipobj)):
         patchdata = zipobj.read(p)
-        flavour = patch_type(patchdata)
+        flavour, _hash = patch_ident(patchdata)
         prgname = program_name(patchdata, flavour)
         if prgname != name:
             continue
@@ -418,6 +431,7 @@ def author_copyright_from_presetinformation_xml(zipobj):
     author = tree.find("Author").text
     copyright = tree.find("Copyright").text
     return author, copyright
+
 
 def all_from_presetinformation_xml(zipobj):
     """Parses a PresetInformation.xml file block from a preset pack and returns all
@@ -496,7 +510,7 @@ def parse_patchdata(data):
 
     """
     patch = Patch()
-    patch.minilogue_type = patch_type(data)
+    patch.minilogue_type, _hash = patch_ident(data)
 
     if patch.minilogue_type == "xd":
         patch_struct = xd.patch_struct["og"]
