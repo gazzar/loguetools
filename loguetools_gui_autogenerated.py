@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Oct 26 2018)
+## Python code generated with wxFormBuilder (version 3.10.1-0-g8feb16b3)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO *NOT* EDIT THIS FILE!
@@ -55,10 +55,15 @@ class MainFrame ( wx.Frame ):
         self.m_checkBox_version.SetToolTip( u"Append loguetools version to filename" )
 
         self.m_toolBar_options.AddControl( self.m_checkBox_version )
-        self.m_checkBox_inits = wx.CheckBox( self.m_toolBar_options, wx.ID_ANY, u"Inits", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_checkBox_inits = wx.CheckBox( self.m_toolBar_options, wx.ID_ANY, u"inits", wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_checkBox_inits.SetToolTip( u"Include patches named Init Program" )
 
         self.m_toolBar_options.AddControl( self.m_checkBox_inits )
+        self.m_checkBox_factory = wx.CheckBox( self.m_toolBar_options, wx.ID_ANY, u"factory", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_checkBox_factory.SetValue(True)
+        self.m_checkBox_factory.SetToolTip( u"Include factory presets when exploding" )
+
+        self.m_toolBar_options.AddControl( self.m_checkBox_factory )
         self.m_toolBar_options.Realize()
 
         checkboxPanelSizer.Add( self.m_toolBar_options, 0, wx.ALL|wx.EXPAND, 0 )
@@ -145,7 +150,7 @@ class MainFrame ( wx.Frame ):
         pass
 
 
-    # Virtual event handlers, overide them in your derived class
+    # Virtual event handlers, override them in your derived class
     def OnMouseoverId( self, event ):
         event.Skip()
 
@@ -171,7 +176,7 @@ class MainFrame ( wx.Frame ):
         event.Skip()
 
     def displaySplitterOnIdle( self, event ):
-    	self.displaySplitter.SetSashPosition( 510 )
-    	self.displaySplitter.Unbind( wx.EVT_IDLE )
+        self.displaySplitter.SetSashPosition( 510 )
+        self.displaySplitter.Unbind( wx.EVT_IDLE )
 
 

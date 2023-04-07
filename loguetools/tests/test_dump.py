@@ -1,4 +1,3 @@
-import click
 from click.testing import CliRunner
 from loguetools.dump import click_dump
 

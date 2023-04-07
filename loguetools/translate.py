@@ -1,7 +1,5 @@
-import sys
 import click
 from zipfile import ZipFile, ZIP_DEFLATED
-from types import LambdaType, FunctionType
 import struct
 from pprint import pprint
 import pathlib
@@ -74,7 +72,7 @@ def convert_from_syx(filename):
     return flavour, patch_data
 
 
-def translate(filename, match_name, match_ident, verbose, unskip_init, force_preset):
+def translate(filename, match_name, match_ident, verbose, unskip_init, skip_factory, force_preset):
     """Translate a minilogue program or program bank to the minilogue xd.
 
     \b
@@ -153,14 +151,17 @@ def translate(filename, match_name, match_ident, verbose, unskip_init, force_pre
         for i, p in enumerate(proglist):
             if input_file.suffix != ".syx":
                 patchdata = zipobj.read(p)
-            flavour = common.patch_type(patchdata)
+            flavour, hash = common.patch_ident(patchdata)
             if common.is_init_patch(flavour, hash):
                 # Init Program identified based on hash; i.e. a "True" Init Program
+                continue
+            if common.is_factory_program(flavour, hash) and skip_factory:
+                # Factory Program found and option to include is unchecked
                 continue
             prgname = common.program_name(patchdata, flavour)
             if common.is_init_program_name(prgname) and not unskip_init:
                 # Init Program found and option not to skip is unchecked
-                continue
+                continue          
             non_init_patch_ids.append(i)
             print(f"{int(p[5:8])+1:03d}: {prgname}")
 

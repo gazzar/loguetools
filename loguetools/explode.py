@@ -1,18 +1,14 @@
-import os
-import sys
 import click
 from zipfile import ZipFile, ZIP_DEFLATED
 import pathlib
-import hashlib
-import re
-from loguetools import og, xd, common
+from loguetools import common
 from loguetools import version
 
 
 XD_PATCH_LENGTH = 1024
 
 
-def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init):
+def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init, unskip_factory):
     """Explode a minilogue og or xd or prologue program bank or extract a program.
 
     \b
@@ -63,10 +59,12 @@ def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_
     sanitise = common.sanitise_patchname()
     for i, p in enumerate(proglist):
         patchdata = zipobj.read(p)
-        hash = hashlib.md5(patchdata).hexdigest()
-        flavour = common.patch_type(patchdata)
+        flavour, hash = common.patch_ident(patchdata)
         if common.is_init_patch(flavour, hash):
             # Init Program identified based on hash; i.e. a "True" Init Program
+            continue
+        if common.is_factory_program(flavour, hash) and not unskip_factory:
+            # Factory Program found and option to include is unchecked
             continue
         prgname = common.program_name(patchdata, flavour)
         if common.is_init_program_name(prgname) and not unskip_init:
@@ -75,7 +73,6 @@ def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_
         if prepend_id:
             prgname = f"{i+1:03d}_{prgname}"
         if append_md5_4:
-            hash = hashlib.md5(patchdata).hexdigest()
             prgname = f"{prgname}-{hash[:4]}"
         if append_version:
             ver = version.__version__.replace(".", "")
@@ -111,8 +108,9 @@ def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_
 @click.option("--append_md5_4", "-m", is_flag=True, help="Append 4 digits of an md5 checksum to the filename")
 @click.option("--append_version", "-v", is_flag=True, help="Append loguetools version to the filename")
 @click.option("--unskip_init", "-u", is_flag=True, help="Don't skip patches named Init Program")
-def click_explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init):
-    explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init)
+@click.option("--unskip_factory", "-f", is_flag=True, help="Don't skip factory patches")
+def click_explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init, unskip_factory):
+    explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_version, unskip_init, unskip_factory)
 
 
 if __name__ == "__main__":

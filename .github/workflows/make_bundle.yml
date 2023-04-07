@@ -20,7 +20,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.10
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
@@ -37,7 +37,7 @@ jobs:
           sudo apt-get install python-wxgtk3.0
           python -m pip freeze
       - name: Create and Build Bundle
-        run: pyinstaller --clean --windowed --onefile main.spec
+        run: pyinstaller --clean main.spec
       - name: Upload Artifact for Linux
         uses: actions/upload-artifact@v2
         if: runner.os == 'Linux'
