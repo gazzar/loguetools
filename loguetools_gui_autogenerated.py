@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Oct 26 2018)
+## Python code generated with wxFormBuilder (version 3.10.1-0-g8feb16b3)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO *NOT* EDIT THIS FILE!
@@ -150,7 +150,7 @@ class MainFrame ( wx.Frame ):
         pass
 
 
-    # Virtual event handlers, overide them in your derived class
+    # Virtual event handlers, override them in your derived class
     def OnMouseoverId( self, event ):
         event.Skip()
 
@@ -176,7 +176,7 @@ class MainFrame ( wx.Frame ):
         event.Skip()
 
     def displaySplitterOnIdle( self, event ):
-    	self.displaySplitter.SetSashPosition( 510 )
-    	self.displaySplitter.Unbind( wx.EVT_IDLE )
+        self.displaySplitter.SetSashPosition( 510 )
+        self.displaySplitter.Unbind( wx.EVT_IDLE )
 
 
