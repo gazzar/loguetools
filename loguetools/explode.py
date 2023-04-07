@@ -67,7 +67,6 @@ def explode(filename, match_name, match_ident, prepend_id, append_md5_4, append_
             # Factory Program found and option to include is unchecked
             continue
         prgname = common.program_name(patchdata, flavour)
-        print(hash, prgname)
         if common.is_init_program_name(prgname) and not unskip_init:
             # Init Program found and option not to skip is unchecked
             continue
