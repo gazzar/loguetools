@@ -155,7 +155,7 @@ class MyFrame(MainFrame):
                     self.toolbar.EnableTool(wx.ID_FILE2, True)
                 if self.logue_type == "xd":
                     suffix = pathlib.Path(self.file).suffix
-                    assert suffix in {".mnlgxdlib", ".mnlgxdpreset"}
+                    assert suffix in {".mnlgxdpreset", ".mnlgxdlib", ".mnlgxdprog"}
                     if suffix == ".mnlgxdlib":
                         self.toolbar.EnableTool(wx.ID_FILE2, True)
                     else:
