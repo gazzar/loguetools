@@ -45,7 +45,7 @@ jobs:
         run: |
           ls -al dist
           chmod -R 755 dist/loguetools*
-          ls =al dist
+          ls -al dist
       - name: Upload Artifact for Linux
         uses: actions/upload-artifact@v3
         if: runner.os == 'Linux'
