@@ -3,7 +3,7 @@
 **loguetools** manipulates Korg 'logue'-series synthesizer patch libraries (what Korg calls program collections).
 
 It perform a few tasks:
-* Translation of patches from the (original) minilogue to the minilogue xd. See the [translation](#translation) section for a description and limitations.  
+* Translation of patches from the (original) minilogue to the minilogue xd. See the [wiki](https://github.com/gazzar/loguetools/wiki) for a description and limitations.  
 (For *minilogue xd*)
 * Bulk extraction of all patches in collections to separate patch files.  
 (For *minilogue*, *minilogue xd*, *prologue*, *monologue*, and *KingKORG*)
@@ -11,7 +11,7 @@ It perform a few tasks:
 (For *minilogue* and *minilogue xd*)
 
 There are two versions:
-1. A gui-based version (Windows and MacOS)
+1. A gui-based version [Windows, MacOS, and Linux (untested on Linux)]
 2. A set of commandline tools written in Python (3.7 or later)
 
 # Download
